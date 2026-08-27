@@ -41,10 +41,10 @@
 - iPhone 16 模拟器启动日志显示：Flutter App 正常启动。
 - Dart MCP `get_runtime_errors`：两台模拟器均返回 `No runtime errors found.`。
 - Dart MCP Widget Inspector：两台模拟器均发现运行中的 `SceneView`，并确认外层 `Listener` 已挂载。
-- 截图证据：验证场景显示老板头部、身体、办公室墙面、桌子、椅子和地面；物理接入后动态对象发生重力位移。
+- 截图证据：iPhone 16 Simulator 最新截图显示全屏竖屏场景、顶部状态卡、底部手势提示卡、老板头发/眼睛/鼻子/领带/手臂、办公室桌椅和地面；视觉层级正常，未出现此前的全屏白色面板；物理接入后动态对象发生重力位移。
 
 ## 当前结论
 
-Flutter 3D 在 iOS Simulator 上已证明能够运行程序化几何体、Flutter GPU/Impeller Metal、SceneView、Rapier 动态刚体、基础手势容器和生命周期壳；当前没有 MCP 可见运行时错误。
+Flutter 3D 在 iOS Simulator 上已证明能够运行程序化几何体、Flutter GPU/Impeller Metal、SceneView、Rapier 动态刚体、基础手势容器和生命周期壳；最新界面截图已完成视觉复核；当前没有 MCP 可见运行时错误。
 
 本次没有测得 60 FPS、30 FPS 门槛、温度、内存和物理 iPhone 表现，因此不能宣布满足 CR-001 的最终 iOS 性能门槛。最终技术选型结论保留为：需要在代表性物理 iPhone 上完成 AC-08、AC-09 后，再决定继续 Flutter 3D 或评估 Godot/Unity。
