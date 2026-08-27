@@ -7,9 +7,14 @@ import '../scene/scene_adapter.dart';
 enum ValidationSessionState { idle, running, paused }
 
 class ValidationApp extends StatefulWidget {
-  const ValidationApp({super.key, this.enable3d = true});
+  const ValidationApp({
+    super.key,
+    this.enable3d = true,
+    this.autoStart = const bool.fromEnvironment('FLUTTER_GPU_VALIDATION'),
+  });
 
   final bool enable3d;
+  final bool autoStart;
 
   @override
   ValidationAppState createState() => ValidationAppState();
@@ -26,6 +31,11 @@ class ValidationAppState extends State<ValidationApp>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     lifecycle.addListener(_onLifecycleChanged);
+    if (widget.autoStart) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _startValidation();
+      });
+    }
   }
 
   @override

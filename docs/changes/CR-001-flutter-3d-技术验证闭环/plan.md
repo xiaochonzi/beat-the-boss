@@ -158,31 +158,31 @@ Flutter App Shell
 
 ### Task 3: 接入物理样例与老板互动
 
-- files: `mobile/pubspec.yaml`, `mobile/lib/physics/physics_adapter.dart`, `mobile/lib/game/boss_interaction.dart`, `mobile/lib/game/game_action.dart`, `mobile/test/physics/physics_adapter_test.dart`, `mobile/test/game/boss_interaction_test.dart`
+- files: `mobile/pubspec.yaml`, `mobile/lib/app/validation_app.dart`, `mobile/lib/scene/scene_adapter.dart`, `mobile/lib/physics/physics_adapter.dart`, `mobile/lib/game/boss_interaction.dart`, `mobile/lib/game/game_action.dart`, `mobile/test/physics/physics_adapter_test.dart`, `mobile/test/game/boss_interaction_test.dart`
 - symbols: PhysicsAdapter、BossInteraction、GameAction、PhysicsEvent
 - read_first: Task 2 的 SceneAdapter 和场景对象；`src/game/GameEngine.ts` 的 `addRigid`、`pickBoss`、`pickScene`、`strikeTarget`、`collision`、`throwChair` 和 `projectile`；Spec 的 REQ-02、BR-04、BR-05
 - depends_on: Task 2
 - interfaces: 输入为道具动作、老板抓取/释放和物理配置；输出为命中、拖拽、投掷、冲量、碰撞和连锁反应事件；PhysicsEvent 不直接修改 UI 或持久化数据
 - current_behavior: 网页使用 Rapier JS 创建刚体、射线检测和碰撞事件；老板受击主要通过运动学姿态程序模拟，移动端能力尚未验证
 - target_behavior: iOS 验证样例中，至少一种道具和老板身体能够产生真实命中、拖拽、投掷、冲量、刚体碰撞和连锁反应，并支持约 30 个动态物理对象作为最低验证规模
-- implementation: 接入 Flutter 物理候选后建立动态/静态刚体和碰撞过滤；将场景实体与物理实体关联；实现老板身体命中查询、抓取/拖动/释放和道具投掷；将碰撞归一化为 PhysicsEvent；实现动态对象规模配置和超限安全降级；物理初始化或核心事件失败时报告阻断错误
+- implementation: 接入 Flutter 物理候选后建立动态/静态刚体和碰撞过滤；将 RapierWorld 挂载到 SceneAdapter 的场景根节点，并由 ValidationApp 的场景生命周期统一初始化；将场景实体与物理实体关联；实现老板身体命中查询、抓取/拖动/释放和道具投掷；将碰撞归一化为 PhysicsEvent；实现动态对象规模配置和超限安全降级；物理初始化或核心事件失败时报告阻断错误
 - invariants: 不用固定动画替代真实物理；物理模块不计算解压值和 Combo；至少 30 个动态对象参与验证；符合 REQ-02、BR-04、BR-05、BR-06
 - verify: `cd mobile && dart analyze && flutter test`; 两类 iOS 真机执行命中、拖拽、投掷和连锁流程并记录 AC-03/AC-04
 - acceptance: 两类设备均观察到真实命中、刚体碰撞和冲量；目标规模内至少发生一次连锁反应；覆盖 AC-03、AC-04
 - done: 物理自动测试通过，且两类 iOS 真机的物理和连锁记录均完成
 
-- [ ] Task 3
+- [x] Task 3
 
 ### Task 4: 实现竖屏手势路由与游戏会话动作
 
-- files: `mobile/lib/input/gesture_router.dart`, `mobile/lib/input/gesture_state.dart`, `mobile/lib/game/validation_session.dart`, `mobile/test/input/gesture_router_test.dart`, `mobile/test/game/validation_session_test.dart`
+- files: `mobile/lib/app/validation_app.dart`, `mobile/lib/scene/scene_adapter.dart`, `mobile/lib/input/gesture_router.dart`, `mobile/lib/input/gesture_state.dart`, `mobile/lib/game/validation_session.dart`, `mobile/test/input/gesture_router_test.dart`, `mobile/test/game/validation_session_test.dart`
 - symbols: GestureRouter、GestureState、ValidationSession、GameAction
 - read_first: Task 1 的 LifecycleController；Task 3 的 GameAction、BossInteraction 和 PhysicsEvent；`src/App.vue` 的 `canvasClick`、`chargeStart`、`chargeEnd`；Spec 的 REQ-03、BR-03
 - depends_on: Task 3
 - interfaces: 输入为竖屏点击、长按、松手、单指拖拽/滑动和双指手势；输出为一次性 GameAction（攻击、蓄力、释放、老板拖拽/甩动、瞄准、相机操作）和取消/失败事件
 - current_behavior: 网页通过 click 和 PointerEvent 区分普通攻击与拖鞋/充气锤蓄力，老板抓取并未形成完整实现；右键和滚轮是桌面交互
 - target_behavior: 在竖屏下手势优先完成点击攻击、长按蓄力、松手释放、老板抓取拖拽甩动、滑动瞄准和双指相机控制；一次手势只产生一个动作，冲突手势有明确取消结果
-- implementation: 定义手势状态和优先级；将起始触点命中场景对象后路由为老板交互或道具动作；实现长按计时与松手释放；实现多指进入后锁定相机手势并取消冲突的单指动作；在 App 暂停或触摸取消时清理所有临时状态；向会话层发送动作而不直接写规则数据
+- implementation: 定义手势状态和优先级；将起始触点命中场景对象后路由为老板交互或道具动作；在 `ValidationApp` 和 `SceneAdapter` 中挂载手势路由与场景输入入口；实现长按计时与松手释放；实现多指进入后锁定相机手势并取消冲突的单指动作；在 App 暂停或触摸取消时清理所有临时状态；向会话层发送动作而不直接写规则数据
 - invariants: 不接受鼠标/键盘替代；重复 pointer/touch up 不得重复释放；暂停时禁止接受核心动作；符合 REQ-03、BR-03、BR-06
 - verify: `cd mobile && dart analyze && flutter test`; 两类 iOS 真机按 AC-05 操作并记录每个手势结果
 - acceptance: 六类核心手势均能产生预期动作；长按只释放一次；暂停或触摸取消后不产生攻击；覆盖 AC-05
@@ -192,7 +192,7 @@ Flutter App Shell
 
 ### Task 5: 接入反馈能力与生命周期暂停恢复
 
-- files: `mobile/lib/feedback/feedback_adapter.dart`, `mobile/lib/feedback/audio_feedback.dart`, `mobile/lib/feedback/haptic_feedback.dart`, `mobile/lib/feedback/visual_feedback.dart`, `mobile/lib/app/lifecycle_controller.dart`, `mobile/test/feedback/feedback_adapter_test.dart`, `mobile/test/app/lifecycle_controller_test.dart`
+- files: `mobile/lib/app/validation_app.dart`, `mobile/lib/feedback/feedback_adapter.dart`, `mobile/lib/feedback/audio_feedback.dart`, `mobile/lib/feedback/haptic_feedback.dart`, `mobile/lib/feedback/visual_feedback.dart`, `mobile/lib/app/lifecycle_controller.dart`, `mobile/test/feedback/feedback_adapter_test.dart`, `mobile/test/app/lifecycle_controller_test.dart`
 - symbols: FeedbackAdapter、AudioFeedback、HapticFeedback、VisualFeedback、LifecycleController
 - read_first: Task 1 的生命周期状态；Task 3 的 PhysicsEvent；Task 4 的 GameAction；`src/game/audio.ts` 的 `AudioManager.tone`；Spec 的 REQ-04/REQ-05、BR-09/BR-10
 - depends_on: Task 4
@@ -251,6 +251,7 @@ Flutter App Shell
 
 - Task 1 记录（2026-08-27）：`flutter create --platforms=ios,android --org=com.beattheboss mobile` 成功生成 75 个文件；`cd mobile && dart analyze && flutter test` 通过；`flutter build ios --no-codesign` 成功生成 `build/ios/iphoneos/Runner.app`；iPhone SE（第 3 代）iOS 18.3 模拟器启动并运行验证壳成功。Task 1 的后续真机验收仍由 Task 6 统一完成。
 - Task 2 记录（2026-08-27）：加入 `flutter_scene` 0.19.0、`flutter_scene_rapier` 0.2.2 和 `vector_math` 2.4.2；`dart analyze`、`flutter test` 和 `flutter build ios --no-codesign` 通过；iPhone SE（第 3 代）iOS 18.3 模拟器启动后点击“开始验证”成功显示程序化办公室和老板场景；Dart MCP Widget Inspector 发现 `SceneView`，Dart MCP runtime errors 返回 `No runtime errors found`。
+- Task 3 记录（2026-08-27）：新增 RapierWorld 挂载、静态/动态刚体和 BossInteraction 释放动作模型；`dart analyze`、`flutter test` 和 `flutter build ios --no-codesign` 通过；带 Flutter GPU 配置的 iPhone SE（第 3 代）iOS 18.3 模拟器自动进入场景，截图显示动态对象受重力产生位移；Dart MCP runtime errors 返回 `No runtime errors found`，Widget Inspector 确认 SceneView 正常运行。触摸端到端动作将在 Task 4 统一验证。
 - Spec 验收标准：先执行 `cd mobile && dart analyze && flutter test`，再执行 `flutter build ios --no-codesign`；在两类 iOS 16+ 代表性真机完成 AC-01～AC-09，并检查 `validation-report.md` 是否覆盖 AC-10。
 - Constitution 规范：当前无已批准具体规则；执行 Blueprint 边界审查、依赖审查、离线启动检查、生命周期检查和真机结果复核。
 - MCP 运行时复核（2026-08-27）：Dart MCP 已连接 iPhone SE（第 3 代）上的 Flutter App；`get_runtime_errors` 返回 `No runtime errors found`；Widget Inspector 返回运行中的 `SceneView`。
@@ -276,3 +277,5 @@ Flutter App Shell
 - 2026-08-27：实测发现 `flutter_scene` 0.23.0 与 `flutter_scene_rapier` 0.5.0 依赖冲突；改用已解析通过的 `flutter_scene` 0.19.0 与 `flutter_scene_rapier` 0.2.2 作为验证基线。
 - 2026-08-27：根据 Task 2 实施前检查，补充 `ValidationApp` 作为场景视图集成点。
 - 2026-08-27：根据 iOS 真机运行错误，补充 iOS Info.plist 与 Android Manifest 的 Flutter GPU 开关配置范围。
+- 2026-08-27：根据 Task 3 集成检查，补充 SceneAdapter 与 ValidationApp 的 RapierWorld 挂载和生命周期集成范围。
+- 2026-08-27：为使手势和反馈形成可运行验证闭环，补充 Task 4/5 对 ValidationApp 与 SceneAdapter 的集成范围。
