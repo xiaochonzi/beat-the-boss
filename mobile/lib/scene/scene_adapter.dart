@@ -16,6 +16,7 @@ class SceneAdapter {
   final PhysicsAdapter physics = PhysicsAdapter();
   final Scene scene = Scene();
   late final PerspectiveCamera camera = _cameraController.create();
+  Node? _bossHead;
 
   Future<void> initialize() async {
     await Scene.initializeStaticResources();
@@ -65,6 +66,23 @@ class SceneAdapter {
       ),
       position,
     );
+  }
+
+  void dragBoss(double x, double y, double width, double height) {
+    final head = _bossHead;
+    if (head == null) return;
+    final target = vm.Vector3(
+      (x / width - 0.5) * 3.2,
+      4.18 - (y / height - 0.42) * 2.2,
+      0.25,
+    );
+    physics.moveKinematic(head, target);
+  }
+
+  void releaseBoss(double dx, double dy) {
+    final head = _bossHead;
+    if (head == null) return;
+    physics.releaseKinematic(head, vm.Vector3(dx * 0.08, -dy * 0.08, 1.4));
   }
 
   void _buildOffice() {
@@ -180,7 +198,8 @@ class SceneAdapter {
       localTransform: vm.Matrix4.translationValues(0, 4.18, 0),
     );
     scene.add(head);
-    physics.addFixedBody(head, halfExtents: vm.Vector3(0.62, 0.62, 0.62));
+    _bossHead = head;
+    physics.addKinematicBody(head, halfExtents: vm.Vector3(0.62, 0.62, 0.62));
     scene.add(
       _box(
         'boss-left-arm',
@@ -218,15 +237,41 @@ class SceneAdapter {
     for (final x in [-0.22, 0.22]) {
       scene.add(
         Node(
-          name: 'boss-eye',
+          name: 'boss-eye-white',
           mesh: Mesh(
-            SphereGeometry(radius: 0.07, segments: 10, rings: 6),
+            SphereGeometry(radius: 0.13, segments: 12, rings: 8),
+            _palette.solid(0xf7f2e7),
+          ),
+          localTransform: vm.Matrix4.translationValues(x, 4.35, 0.63),
+        ),
+      );
+      scene.add(
+        Node(
+          name: 'boss-pupil',
+          mesh: Mesh(
+            SphereGeometry(radius: 0.055, segments: 10, rings: 6),
             _palette.solid(0x182138),
           ),
-          localTransform: vm.Matrix4.translationValues(x, 4.35, 0.68),
+          localTransform: vm.Matrix4.translationValues(x, 4.35, 0.75),
         ),
       );
     }
+    scene.add(
+      _box(
+        'boss-left-brow',
+        vm.Vector3(-0.22, 4.52, 0.66),
+        vm.Vector3(0.16, 0.035, 0.025),
+        0x241c1b,
+      ),
+    );
+    scene.add(
+      _box(
+        'boss-right-brow',
+        vm.Vector3(0.22, 4.52, 0.66),
+        vm.Vector3(0.16, 0.035, 0.025),
+        0x241c1b,
+      ),
+    );
     scene.add(
       Node(
         name: 'boss-nose',
@@ -261,6 +306,60 @@ class SceneAdapter {
         0.13,
         0.12,
         0xf1b78d,
+      ),
+    );
+    scene.add(
+      _capsule(
+        'boss-left-hand',
+        vm.Vector3(-0.98, 2.52, 0),
+        0.16,
+        0.12,
+        0xf1b78d,
+      ),
+    );
+    scene.add(
+      _capsule(
+        'boss-right-hand',
+        vm.Vector3(0.98, 2.52, 0),
+        0.16,
+        0.12,
+        0xf1b78d,
+      ),
+    );
+    scene.add(
+      _capsule(
+        'boss-left-leg',
+        vm.Vector3(-0.25, 1.45, 0),
+        0.2,
+        0.38,
+        0x203f72,
+      ),
+    );
+    scene.add(
+      _capsule(
+        'boss-right-leg',
+        vm.Vector3(0.25, 1.45, 0),
+        0.2,
+        0.38,
+        0x203f72,
+      ),
+    );
+    scene.add(
+      _capsule(
+        'boss-left-shoe',
+        vm.Vector3(-0.25, 0.62, 0.14),
+        0.19,
+        0.22,
+        0x241c1b,
+      ),
+    );
+    scene.add(
+      _capsule(
+        'boss-right-shoe',
+        vm.Vector3(0.25, 0.62, 0.14),
+        0.19,
+        0.22,
+        0x241c1b,
       ),
     );
   }
