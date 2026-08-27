@@ -51,10 +51,18 @@ class SceneAdapter {
       'back-wall',
       vm.Vector3(0, 3, -5.5),
       vm.Vector3(8, 3, 0.15),
-      0xf7f2e7,
+      0x31415f,
     );
     scene.add(wall);
     physics.addFixedBody(wall, halfExtents: vm.Vector3(8, 3, 0.15));
+    scene.add(
+      _box(
+        'window',
+        vm.Vector3(-4.2, 4, -5.25),
+        vm.Vector3(2.1, 1.15, 0.06),
+        0x79c8d8,
+      ),
+    );
     scene.add(
       _box(
         'desk',
@@ -97,7 +105,7 @@ class SceneAdapter {
       0x203f72,
     );
     scene.add(hip);
-    physics.addDynamicBody(hip, halfExtents: vm.Vector3(0.38, 0.4, 0.3));
+    physics.addFixedBody(hip, halfExtents: vm.Vector3(0.38, 0.4, 0.3));
     final chest = _box(
       'boss-chest',
       vm.Vector3(0, 3.05, 0),
@@ -105,7 +113,7 @@ class SceneAdapter {
       0x203f72,
     );
     scene.add(chest);
-    physics.addDynamicBody(chest, halfExtents: vm.Vector3(0.7, 0.8, 0.4));
+    physics.addFixedBody(chest, halfExtents: vm.Vector3(0.7, 0.8, 0.4));
     final head = Node(
       name: 'boss-head',
       mesh: Mesh(
@@ -115,6 +123,62 @@ class SceneAdapter {
       localTransform: vm.Matrix4.translationValues(0, 4.25, 0),
     );
     scene.add(head);
-    physics.addDynamicBody(head, halfExtents: vm.Vector3(0.72, 0.72, 0.72));
+    physics.addFixedBody(head, halfExtents: vm.Vector3(0.72, 0.72, 0.72));
+    scene.add(
+      _box(
+        'boss-left-arm',
+        vm.Vector3(-0.9, 3.05, 0),
+        vm.Vector3(0.18, 0.65, 0.18),
+        0x203f72,
+      ),
+    );
+    scene.add(
+      _box(
+        'boss-right-arm',
+        vm.Vector3(0.9, 3.05, 0),
+        vm.Vector3(0.18, 0.65, 0.18),
+        0x203f72,
+      ),
+    );
+    scene.add(
+      _box(
+        'boss-tie',
+        vm.Vector3(0, 3.05, 0.48),
+        vm.Vector3(0.1, 0.42, 0.05),
+        0xe94444,
+      ),
+    );
+    scene.add(
+      Node(
+        name: 'boss-hair',
+        mesh: Mesh(
+          SphereGeometry(radius: 0.62, segments: 16, rings: 8),
+          _palette.solid(0x241c1b),
+        ),
+        localTransform: vm.Matrix4.translationValues(0, 4.7, 0),
+      ),
+    );
+    for (final x in [-0.22, 0.22]) {
+      scene.add(
+        Node(
+          name: 'boss-eye',
+          mesh: Mesh(
+            SphereGeometry(radius: 0.07, segments: 10, rings: 6),
+            _palette.solid(0x182138),
+          ),
+          localTransform: vm.Matrix4.translationValues(x, 4.35, 0.68),
+        ),
+      );
+    }
+    scene.add(
+      Node(
+        name: 'boss-nose',
+        mesh: Mesh(
+          SphereGeometry(radius: 0.1, segments: 10, rings: 6),
+          _palette.solid(0xd7956c),
+        ),
+        localTransform: vm.Matrix4.translationValues(0, 4.16, 0.72),
+      ),
+    );
   }
 }
