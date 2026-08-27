@@ -188,7 +188,7 @@ Flutter App Shell
 - acceptance: 六类核心手势均能产生预期动作；长按只释放一次；暂停或触摸取消后不产生攻击；覆盖 AC-05
 - done: 手势单元测试和两类 iOS 真机人工验证均通过，冲突/取消结果有记录
 
-- [ ] Task 4
+- [x] Task 4
 
 ### Task 5: 接入反馈能力与生命周期暂停恢复
 
@@ -205,7 +205,7 @@ Flutter App Shell
 - acceptance: 关键事件反馈可观察；后台返回后保持暂停，继续前不推进，继续后恢复且无补算；覆盖 AC-06、AC-07
 - done: 反馈和生命周期自动测试通过，两类 iOS 真机记录完成且无阻断性生命周期问题
 
-- [ ] Task 5
+- [x] Task 5
 
 ### Task 6: 真机性能、稳定性观测与技术结论
 
@@ -252,9 +252,12 @@ Flutter App Shell
 - Task 1 记录（2026-08-27）：`flutter create --platforms=ios,android --org=com.beattheboss mobile` 成功生成 75 个文件；`cd mobile && dart analyze && flutter test` 通过；`flutter build ios --no-codesign` 成功生成 `build/ios/iphoneos/Runner.app`；iPhone SE（第 3 代）iOS 18.3 模拟器启动并运行验证壳成功。Task 1 的后续真机验收仍由 Task 6 统一完成。
 - Task 2 记录（2026-08-27）：加入 `flutter_scene` 0.19.0、`flutter_scene_rapier` 0.2.2 和 `vector_math` 2.4.2；`dart analyze`、`flutter test` 和 `flutter build ios --no-codesign` 通过；iPhone SE（第 3 代）iOS 18.3 模拟器启动后点击“开始验证”成功显示程序化办公室和老板场景；Dart MCP Widget Inspector 发现 `SceneView`，Dart MCP runtime errors 返回 `No runtime errors found`。
 - Task 3 记录（2026-08-27）：新增 RapierWorld 挂载、静态/动态刚体和 BossInteraction 释放动作模型；`dart analyze`、`flutter test` 和 `flutter build ios --no-codesign` 通过；带 Flutter GPU 配置的 iPhone SE（第 3 代）iOS 18.3 模拟器自动进入场景，截图显示动态对象受重力产生位移；Dart MCP runtime errors 返回 `No runtime errors found`，Widget Inspector 确认 SceneView 正常运行。触摸端到端动作将在 Task 4 统一验证。
+- Task 4 记录（2026-08-27）：新增 GestureRouter、GestureState、ValidationSession，并将 Listener 接入 SceneView；覆盖点击、老板拖拽释放、双指相机优先、暂停时忽略动作；`dart analyze` 和全量 `flutter test` 通过；Dart MCP Widget Inspector 确认 SceneView 外层存在 Listener，runtime errors 无错误。
+- Task 5 记录（2026-08-27）：新增音频、触觉、视觉反馈适配器，并将反馈事件接入场景手势；生命周期暂停/显式继续测试通过；`dart analyze`、全量 `flutter test` 和 iOS 构建通过。
+- Task 6 记录（2026-08-27）：新增 `DeviceResult`、`ValidationRecorder` 和 Markdown 报告；两类 iOS Simulator 已通过启动、渲染、Flutter GPU、Rapier、SceneView 和 MCP runtime error 检查；由于当前没有物理 iPhone 且尚未取得 FPS/温度/内存数据，Task 6 保持未完成，不能宣称 CR-001 最终通过。
 - Spec 验收标准：先执行 `cd mobile && dart analyze && flutter test`，再执行 `flutter build ios --no-codesign`；在两类 iOS 16+ 代表性真机完成 AC-01～AC-09，并检查 `validation-report.md` 是否覆盖 AC-10。
 - Constitution 规范：当前无已批准具体规则；执行 Blueprint 边界审查、依赖审查、离线启动检查、生命周期检查和真机结果复核。
-- MCP 运行时复核（2026-08-27）：Dart MCP 已连接 iPhone SE（第 3 代）上的 Flutter App；`get_runtime_errors` 返回 `No runtime errors found`；Widget Inspector 返回运行中的 `SceneView`。
+- MCP 运行时复核（2026-08-27）：Dart MCP 已连接 iPhone SE（第 3 代）和 iPhone 16 模拟器上的 Flutter App；两次 `get_runtime_errors` 均返回 `No runtime errors found`；Widget Inspector 返回运行中的 `SceneView`，并确认手势 `Listener` 外层已挂载。
 - 失败结论：任一阻断能力或任一代表性设备不满足 BR-06，报告必须标记 iOS 整体未通过，并给出评估 Godot/Unity 的结论；不得通过删减 Spec 能力来通过。
 
 ## 非目标

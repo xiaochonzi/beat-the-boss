@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_scene/scene.dart';
 
+import '../feedback/feedback_adapter.dart';
+
 import 'lifecycle_controller.dart';
+import '../game/validation_session.dart';
+import '../input/gesture_router.dart';
 import '../scene/scene_adapter.dart';
 
 enum ValidationSessionState { idle, running, paused }
@@ -23,8 +27,12 @@ class ValidationApp extends StatefulWidget {
 class ValidationAppState extends State<ValidationApp>
     with WidgetsBindingObserver {
   final LifecycleController lifecycle = LifecycleController();
+  final ValidationSession session = ValidationSession();
+  final GestureRouter gestureRouter = GestureRouter();
+  final FeedbackAdapter feedback = FeedbackAdapter();
   SceneAdapter? _sceneAdapter;
   bool _sceneReady = false;
+  String _gestureLabel = '等待手势';
 
   @override
   void initState() {
@@ -46,9 +54,54 @@ class ValidationAppState extends State<ValidationApp>
     super.dispose();
   }
 
-  void _onLifecycleChanged() => setState(() {});
+  void _onLifecycleChanged() {
+    if (lifecycle.state == ValidationLifecycle.paused) {
+      session.pause();
+    }
+    setState(() {});
+  }
+
+  bool _hitBoss(Offset position, Size size) {
+    return position.dx > size.width * 0.3 &&
+        position.dx < size.width * 0.7 &&
+        position.dy > size.height * 0.2 &&
+        position.dy < size.height * 0.65;
+  }
+
+  void _pointerDown(PointerDownEvent event, Size size) {
+    if (lifecycle.state != ValidationLifecycle.running) return;
+    final intent = gestureRouter.pointerDown(
+      pointer: event.pointer,
+      x: event.localPosition.dx,
+      y: event.localPosition.dy,
+      hitsBoss: _hitBoss(event.localPosition, size),
+    );
+    if (intent is CameraIntent) setState(() => _gestureLabel = '相机手势');
+  }
+
+  void _pointerMove(PointerMoveEvent event) {
+    gestureRouter.pointerMove(
+      pointer: event.pointer,
+      x: event.localPosition.dx,
+      y: event.localPosition.dy,
+    );
+  }
+
+  void _pointerUp(PointerUpEvent event) {
+    final intent = gestureRouter.pointerUp(pointer: event.pointer);
+    if (intent == null || !mounted) return;
+    setState(() {
+      _gestureLabel = intent is BossDragIntent ? '老板拖拽释放' : '点击攻击';
+    });
+    feedback.emit(
+      intent is BossDragIntent ? FeedbackEvent.heavyHit : FeedbackEvent.hit,
+    );
+  }
+
+  void _pointerCancel(PointerCancelEvent event) => gestureRouter.cancel();
 
   void _startValidation() {
+    session.resume();
     lifecycle.start();
     if (widget.enable3d) _loadScene();
   }
@@ -96,9 +149,44 @@ class ValidationAppState extends State<ValidationApp>
               const SizedBox(height: 24),
               if (isRunning && _sceneReady && widget.enable3d)
                 Expanded(
-                  child: SceneView(
-                    _sceneAdapter!.scene,
-                    camera: _sceneAdapter!.camera,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) => Listener(
+                      onPointerDown: (event) =>
+                          _pointerDown(event, constraints.biggest),
+                      onPointerMove: _pointerMove,
+                      onPointerUp: _pointerUp,
+                      onPointerCancel: _pointerCancel,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          SceneView(
+                            _sceneAdapter!.scene,
+                            camera: _sceneAdapter!.camera,
+                          ),
+                          Align(
+                            alignment: Alignment.topCenter,
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: DecoratedBox(
+                                decoration: const BoxDecoration(
+                                  color: Color(0xCC182138),
+                                ),
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
+                                  child: Text(
+                                    '手势：$_gestureLabel',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               if (!isRunning && !isPaused)
@@ -108,7 +196,10 @@ class ValidationAppState extends State<ValidationApp>
                 ),
               if (isPaused)
                 FilledButton(
-                  onPressed: lifecycle.continueSession,
+                  onPressed: () {
+                    session.resume();
+                    lifecycle.continueSession();
+                  },
                   child: const Text('继续'),
                 ),
             ],
