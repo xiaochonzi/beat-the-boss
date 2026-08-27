@@ -26,7 +26,14 @@ class SceneAdapter {
   }
 
   Node _box(String name, vm.Vector3 position, vm.Vector3 size, int color) {
-    final mesh = Mesh(CuboidGeometry(size), _palette.solid(color));
+    return _node(
+      name,
+      Mesh(CuboidGeometry(size), _palette.solid(color)),
+      position,
+    );
+  }
+
+  Node _node(String name, Mesh mesh, vm.Vector3 position) {
     return Node(
       name: name,
       mesh: mesh,
@@ -35,6 +42,28 @@ class SceneAdapter {
         position.y,
         position.z,
       ),
+    );
+  }
+
+  Node _capsule(
+    String name,
+    vm.Vector3 position,
+    double radius,
+    double height,
+    int color,
+  ) {
+    return _node(
+      name,
+      Mesh(
+        CapsuleGeometry(
+          radius: radius,
+          height: height,
+          radialSegments: 16,
+          capRings: 6,
+        ),
+        _palette.solid(color),
+      ),
+      position,
     );
   }
 
@@ -58,9 +87,25 @@ class SceneAdapter {
     scene.add(
       _box(
         'window',
-        vm.Vector3(-4.2, 4, -5.25),
-        vm.Vector3(2.1, 1.15, 0.06),
+        vm.Vector3(-2.8, 4.3, -5.25),
+        vm.Vector3(1.5, 0.9, 0.06),
         0x79c8d8,
+      ),
+    );
+    scene.add(
+      _box(
+        'window-cross-horizontal',
+        vm.Vector3(-2.8, 4.3, -5.12),
+        vm.Vector3(1.5, 0.05, 0.08),
+        0xf7f2e7,
+      ),
+    );
+    scene.add(
+      _box(
+        'window-cross-vertical',
+        vm.Vector3(-2.8, 4.3, -5.12),
+        vm.Vector3(0.05, 0.9, 0.08),
+        0xf7f2e7,
       ),
     );
     scene.add(
@@ -71,6 +116,16 @@ class SceneAdapter {
         0x8b5737,
       ),
     );
+    for (final x in [-1.9, 1.9]) {
+      final leg = _box(
+        'desk-leg',
+        vm.Vector3(x, 0.5, -1.55),
+        vm.Vector3(0.16, 0.5, 0.16),
+        0x60402c,
+      );
+      scene.add(leg);
+      physics.addFixedBody(leg, halfExtents: vm.Vector3(0.16, 0.5, 0.16));
+    }
     final monitor = _box(
       'monitor',
       vm.Vector3(0.75, 2.05, -1.8),
@@ -98,18 +153,20 @@ class SceneAdapter {
   }
 
   void _buildBoss() {
-    final hip = _box(
+    final hip = _capsule(
       'boss-hip',
       vm.Vector3(0, 2.25, 0),
-      vm.Vector3(0.38, 0.4, 0.3),
+      0.36,
+      0.22,
       0x203f72,
     );
     scene.add(hip);
-    physics.addFixedBody(hip, halfExtents: vm.Vector3(0.38, 0.4, 0.3));
-    final chest = _box(
+    physics.addFixedBody(hip, halfExtents: vm.Vector3(0.36, 0.4, 0.3));
+    final chest = _capsule(
       'boss-chest',
       vm.Vector3(0, 3.05, 0),
-      vm.Vector3(0.7, 0.8, 0.4),
+      0.55,
+      0.42,
       0x203f72,
     );
     scene.add(chest);
@@ -117,26 +174,26 @@ class SceneAdapter {
     final head = Node(
       name: 'boss-head',
       mesh: Mesh(
-        SphereGeometry(radius: 0.72, segments: 20, rings: 12),
+        SphereGeometry(radius: 0.62, segments: 24, rings: 16),
         _palette.solid(0xf1b78d),
       ),
-      localTransform: vm.Matrix4.translationValues(0, 4.25, 0),
+      localTransform: vm.Matrix4.translationValues(0, 4.18, 0),
     );
     scene.add(head);
-    physics.addFixedBody(head, halfExtents: vm.Vector3(0.72, 0.72, 0.72));
+    physics.addFixedBody(head, halfExtents: vm.Vector3(0.62, 0.62, 0.62));
     scene.add(
       _box(
         'boss-left-arm',
-        vm.Vector3(-0.9, 3.05, 0),
-        vm.Vector3(0.18, 0.65, 0.18),
+        vm.Vector3(-0.82, 3.05, 0),
+        vm.Vector3(0.15, 0.5, 0.15),
         0x203f72,
       ),
     );
     scene.add(
       _box(
         'boss-right-arm',
-        vm.Vector3(0.9, 3.05, 0),
-        vm.Vector3(0.18, 0.65, 0.18),
+        vm.Vector3(0.82, 3.05, 0),
+        vm.Vector3(0.15, 0.5, 0.15),
         0x203f72,
       ),
     );
@@ -152,10 +209,10 @@ class SceneAdapter {
       Node(
         name: 'boss-hair',
         mesh: Mesh(
-          SphereGeometry(radius: 0.62, segments: 16, rings: 8),
+          SphereGeometry(radius: 0.5, segments: 20, rings: 10),
           _palette.solid(0x241c1b),
         ),
-        localTransform: vm.Matrix4.translationValues(0, 4.7, 0),
+        localTransform: vm.Matrix4.translationValues(0, 4.68, 0),
       ),
     );
     for (final x in [-0.22, 0.22]) {
@@ -177,7 +234,33 @@ class SceneAdapter {
           SphereGeometry(radius: 0.1, segments: 10, rings: 6),
           _palette.solid(0xd7956c),
         ),
-        localTransform: vm.Matrix4.translationValues(0, 4.16, 0.72),
+        localTransform: vm.Matrix4.translationValues(0, 4.1, 0.62),
+      ),
+    );
+    scene.add(
+      _box(
+        'boss-mouth',
+        vm.Vector3(0, 3.91, 0.63),
+        vm.Vector3(0.18, 0.035, 0.025),
+        0x8c3f46,
+      ),
+    );
+    scene.add(
+      _capsule(
+        'boss-left-ear',
+        vm.Vector3(-0.62, 4.18, 0),
+        0.13,
+        0.12,
+        0xf1b78d,
+      ),
+    );
+    scene.add(
+      _capsule(
+        'boss-right-ear',
+        vm.Vector3(0.62, 4.18, 0),
+        0.13,
+        0.12,
+        0xf1b78d,
       ),
     );
   }
