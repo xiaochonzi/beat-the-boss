@@ -6,6 +6,7 @@ import '../feedback/feedback_adapter.dart';
 import 'lifecycle_controller.dart';
 import '../game/validation_session.dart';
 import '../input/gesture_router.dart';
+import '../input/gesture_state.dart';
 import '../scene/scene_adapter.dart';
 
 enum ValidationSessionState { idle, running, paused }
@@ -33,6 +34,7 @@ class ValidationAppState extends State<ValidationApp>
   SceneAdapter? _sceneAdapter;
   bool _sceneReady = false;
   String _gestureLabel = '等待手势';
+  Size _sceneSize = Size.zero;
 
   @override
   void initState() {
@@ -85,6 +87,15 @@ class ValidationAppState extends State<ValidationApp>
       x: event.localPosition.dx,
       y: event.localPosition.dy,
     );
+    if (gestureRouter.state.mode == GestureMode.draggingBoss &&
+        _sceneSize != Size.zero) {
+      _sceneAdapter?.dragBoss(
+        event.localPosition.dx,
+        event.localPosition.dy,
+        _sceneSize.width,
+        _sceneSize.height,
+      );
+    }
   }
 
   void _pointerUp(PointerUpEvent event) {
@@ -93,6 +104,9 @@ class ValidationAppState extends State<ValidationApp>
     setState(() {
       _gestureLabel = intent is BossDragIntent ? '老板拖拽释放' : '点击攻击';
     });
+    if (intent is BossDragIntent) {
+      _sceneAdapter?.releaseBoss(intent.delta.dx, intent.delta.dy);
+    }
     feedback.emit(
       intent is BossDragIntent ? FeedbackEvent.heavyHit : FeedbackEvent.hit,
     );
@@ -123,73 +137,76 @@ class ValidationAppState extends State<ValidationApp>
 
   Widget _buildScene() {
     return LayoutBuilder(
-      builder: (context, constraints) => Listener(
-        onPointerDown: (event) => _pointerDown(event, constraints.biggest),
-        onPointerMove: _pointerMove,
-        onPointerUp: _pointerUp,
-        onPointerCancel: _pointerCancel,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            SceneView(_sceneAdapter!.scene, camera: _sceneAdapter!.camera),
-            const DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xAA101827), Colors.transparent],
-                  stops: [0, .25],
+      builder: (context, constraints) {
+        _sceneSize = constraints.biggest;
+        return Listener(
+          onPointerDown: (event) => _pointerDown(event, constraints.biggest),
+          onPointerMove: _pointerMove,
+          onPointerUp: _pointerUp,
+          onPointerCancel: _pointerCancel,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              SceneView(_sceneAdapter!.scene, camera: _sceneAdapter!.camera),
+              const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0xAA101827), Colors.transparent],
+                    stops: [0, .25],
+                  ),
+                ),
+                child: SizedBox.expand(),
+              ),
+              SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 14, 18, 0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        height: 58,
+                        child: _StatusChip(
+                          icon: Icons.threed_rotation,
+                          label: 'Flutter 3D',
+                          value: '验证中',
+                        ),
+                      ),
+                      SizedBox(
+                        height: 58,
+                        child: _StatusChip(
+                          icon: Icons.touch_app,
+                          label: '当前手势',
+                          value: _gestureLabel,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              child: SizedBox.expand(),
-            ),
-            SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(18, 14, 18, 0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      height: 58,
-                      child: _StatusChip(
-                        icon: Icons.threed_rotation,
-                        label: 'Flutter 3D',
-                        value: '验证中',
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: SafeArea(
+                  minimum: const EdgeInsets.fromLTRB(18, 0, 18, 18),
+                  child: Align(
+                    alignment: Alignment.bottomCenter,
+                    child: SizedBox(
+                      height: 72,
+                      child: _HintCard(
+                        icon: Icons.pan_tool_alt_rounded,
+                        title: '拖动老板，制造一点混乱',
+                        subtitle: '点击攻击 · 长按蓄力 · 双指旋转镜头',
                       ),
-                    ),
-                    SizedBox(
-                      height: 58,
-                      child: _StatusChip(
-                        icon: Icons.touch_app,
-                        label: '当前手势',
-                        value: _gestureLabel,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: SafeArea(
-                minimum: const EdgeInsets.fromLTRB(18, 0, 18, 18),
-                child: Align(
-                  alignment: Alignment.bottomCenter,
-                  child: SizedBox(
-                    height: 72,
-                    child: _HintCard(
-                      icon: Icons.pan_tool_alt_rounded,
-                      title: '拖动老板，制造一点混乱',
-                      subtitle: '点击攻击 · 长按蓄力 · 双指旋转镜头',
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
-      ),
+            ],
+          ),
+        );
+      },
     );
   }
 

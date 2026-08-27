@@ -9,6 +9,7 @@ class PhysicsAdapter {
   int _dynamicBodies = 0;
   RapierWorld? _world;
   bool _attached = false;
+  final Map<scene.Node, RapierRigidBody> _bodies = {};
 
   int get dynamicBodies => _dynamicBodies;
   bool get canAddDynamicBody => _dynamicBodies < maxDynamicBodies;
@@ -24,11 +25,26 @@ class PhysicsAdapter {
   }
 
   bool addFixedBody(scene.Node node, {required Vector3 halfExtents}) {
+    return _addBody(node, scene.BodyType.fixed, halfExtents: halfExtents);
+  }
+
+  bool addKinematicBody(scene.Node node, {required Vector3 halfExtents}) {
+    return _addBody(node, scene.BodyType.kinematic, halfExtents: halfExtents);
+  }
+
+  bool _addBody(
+    scene.Node node,
+    scene.BodyType type, {
+    required Vector3 halfExtents,
+    double mass = 1,
+  }) {
     if (_world == null) return false;
-    node.addComponent(RapierRigidBody(type: scene.BodyType.fixed));
+    final body = RapierRigidBody(type: type, mass: mass);
+    node.addComponent(body);
     node.addComponent(
       RapierCollider(shape: scene.BoxShape(halfExtents: halfExtents)),
     );
+    _bodies[node] = body;
     return true;
   }
 
@@ -38,14 +54,31 @@ class PhysicsAdapter {
     double mass = 1,
   }) {
     if (!canAddDynamicBody) return false;
-    node.addComponent(
-      RapierRigidBody(type: scene.BodyType.dynamic_, mass: mass),
-    );
-    node.addComponent(
-      RapierCollider(shape: scene.BoxShape(halfExtents: halfExtents)),
-    );
+    if (!_addBody(
+      node,
+      scene.BodyType.dynamic_,
+      halfExtents: halfExtents,
+      mass: mass,
+    )) {
+      return false;
+    }
     _dynamicBodies++;
     return true;
+  }
+
+  void moveKinematic(scene.Node node, Vector3 position) {
+    if (_bodies[node]?.type != scene.BodyType.kinematic) return;
+    node.localTransform = Matrix4.translationValues(
+      position.x,
+      position.y,
+      position.z,
+    );
+  }
+
+  void releaseKinematic(scene.Node node, Vector3 velocity) {
+    final body = _bodies[node];
+    if (body?.type != scene.BodyType.kinematic) return;
+    body!.linearVelocity = velocity;
   }
 
   void removeDynamicBody() {
