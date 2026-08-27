@@ -7,7 +7,7 @@ void main() {
   testWidgets('shows the validation shell and can pause and resume', (
     tester,
   ) async {
-    await tester.pumpWidget(const ValidationApp());
+    await tester.pumpWidget(const ValidationApp(enable3d: false));
 
     expect(find.text('Flutter 3D 技术验证'), findsOneWidget);
     expect(find.text('开始验证'), findsOneWidget);

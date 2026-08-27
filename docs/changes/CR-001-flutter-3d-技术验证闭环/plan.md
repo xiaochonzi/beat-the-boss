@@ -16,7 +16,7 @@ created_at: 2026-08-27
 ## 实现策略
 
 - 在仓库内通过 Flutter 官方 CLI 命令新增独立 `mobile/` Flutter 工程：`flutter create --platforms=ios,android --org=com.beattheboss mobile`；保留现有 `src/` 网页项目不变，避免技术验证污染现有可运行版本。
-- 采用 Flutter 3.47.1 stable 作为当前验证基线；使用 `flutter_scene` 0.23.0 作为 3D 场景候选，使用 `flutter_scene_rapier` 0.5.0 作为物理候选。若依赖在 iOS 真机无法稳定构建或运行，只记录为候选栈失败，不改变 Spec 的业务目标。
+- 采用 Flutter 3.47.1 stable 作为当前验证基线；采用已实际解析通过的 `flutter_scene` 0.19.0 与 `flutter_scene_rapier` 0.2.2 作为本次 3D/物理验证组合。`flutter_scene` 0.23.0 与 `flutter_scene_rapier` 0.5.0 当前存在 `scene` 主版本冲突，因此不作为本次组合；若当前组合在 iOS 真机无法稳定构建或运行，只记录为候选栈失败，不改变 Spec 的业务目标。
 - 先建立最小纵向切片，再逐项叠加物理、手势、反馈和生命周期能力；每个 Task 都输出可运行或可验证的结果。
 - 通过明确的领域事件隔离渲染/物理、手势、游戏规则、反馈和应用生命周期；验证工程不提前实现完整商业化。
 - 使用真实 iOS 设备验证，不以桌面模拟、录屏或静态场景代替真机结果。
@@ -141,20 +141,20 @@ Flutter App Shell
 
 ### Task 2: 建立程序化 3D 场景与渲染样例
 
-- files: `mobile/pubspec.yaml`, `mobile/lib/scene/scene_adapter.dart`, `mobile/lib/scene/procedural_geometry.dart`, `mobile/lib/scene/material_palette.dart`, `mobile/lib/scene/camera_controller.dart`, `mobile/test/scene/procedural_geometry_test.dart`
+- files: `mobile/pubspec.yaml`, `mobile/ios/Runner/Info.plist`, `mobile/android/app/src/main/AndroidManifest.xml`, `mobile/lib/app/validation_app.dart`, `mobile/lib/scene/scene_adapter.dart`, `mobile/lib/scene/procedural_geometry.dart`, `mobile/lib/scene/material_palette.dart`, `mobile/lib/scene/camera_controller.dart`, `mobile/test/scene/procedural_geometry_test.dart`
 - symbols: SceneAdapter、ProceduralGeometry、MaterialPalette、CameraController
 - read_first: Task 1 的 App 入口和验证状态；`src/game/GameEngine.ts` 的 `buildScene`、`addRigid`、`createBoss`、`box` 和程序化模型方法；Spec 的 REQ-01、BR-02
 - depends_on: Task 1
 - interfaces: 输入为场景初始化、相机手势和画质配置；输出为可渲染的程序化老板、办公室、材质、灯光、相机和基础动画状态
 - current_behavior: 网页通过 Three.js 几何体、材质、灯光和相机创建办公室与老板；移动端无对应场景
 - target_behavior: iOS 验证样例显示可辨识的卡通办公室和老板，支持程序化几何体、材质、灯光、相机和基础动画，并可在竖屏场景观察
-- implementation: 接入选定 Flutter 3D 场景候选；建立低复杂度几何体和材质调色板；创建老板身体部件和办公室样例；提供竖屏相机默认姿态与双指相机控制入口；为目标动态对象规模预留场景容量配置；对创建失败输出阻断性验证错误
+- implementation: 在已解析的 `flutter_scene` 0.19.0 基线上接入 Flutter 3D 场景候选；在 iOS `Info.plist` 开启 `FLTEnableFlutterGPU`，在 Android Manifest 开启 `io.flutter.embedding.android.EnableFlutterGPU`；建立低复杂度几何体和材质调色板；创建老板身体部件和办公室样例；在 `ValidationApp` 中挂载场景视图；提供竖屏相机默认姿态与双指相机控制入口；为目标动态对象规模预留场景容量配置；对创建失败输出阻断性验证错误
 - invariants: 必须是真实实时渲染；不加载外部 GLB/GLTF 作为核心模型；不引入超出 Spec 的美术内容；符合 REQ-01、BR-02、BR-05
 - verify: `cd mobile && dart analyze && flutter test`; 真机运行场景并记录 AC-01/AC-02
 - acceptance: 两类代表性 iOS 真机均能进入竖屏 3D 场景，观察到程序化几何体、材质、灯光、相机和基础动画；静态画面不能单独通过；覆盖 AC-01、AC-02
 - done: 两类 iOS 设备均可运行并观察到完整渲染样例，自动测试和人工记录均完成
 
-- [ ] Task 2
+- [x] Task 2
 
 ### Task 3: 接入物理样例与老板互动
 
@@ -250,8 +250,10 @@ Flutter App Shell
 ## 最终验证
 
 - Task 1 记录（2026-08-27）：`flutter create --platforms=ios,android --org=com.beattheboss mobile` 成功生成 75 个文件；`cd mobile && dart analyze && flutter test` 通过；`flutter build ios --no-codesign` 成功生成 `build/ios/iphoneos/Runner.app`；iPhone SE（第 3 代）iOS 18.3 模拟器启动并运行验证壳成功。Task 1 的后续真机验收仍由 Task 6 统一完成。
+- Task 2 记录（2026-08-27）：加入 `flutter_scene` 0.19.0、`flutter_scene_rapier` 0.2.2 和 `vector_math` 2.4.2；`dart analyze`、`flutter test` 和 `flutter build ios --no-codesign` 通过；iPhone SE（第 3 代）iOS 18.3 模拟器启动后点击“开始验证”成功显示程序化办公室和老板场景；Dart MCP Widget Inspector 发现 `SceneView`，Dart MCP runtime errors 返回 `No runtime errors found`。
 - Spec 验收标准：先执行 `cd mobile && dart analyze && flutter test`，再执行 `flutter build ios --no-codesign`；在两类 iOS 16+ 代表性真机完成 AC-01～AC-09，并检查 `validation-report.md` 是否覆盖 AC-10。
 - Constitution 规范：当前无已批准具体规则；执行 Blueprint 边界审查、依赖审查、离线启动检查、生命周期检查和真机结果复核。
+- MCP 运行时复核（2026-08-27）：Dart MCP 已连接 iPhone SE（第 3 代）上的 Flutter App；`get_runtime_errors` 返回 `No runtime errors found`；Widget Inspector 返回运行中的 `SceneView`。
 - 失败结论：任一阻断能力或任一代表性设备不满足 BR-06，报告必须标记 iOS 整体未通过，并给出评估 Godot/Unity 的结论；不得通过删减 Spec 能力来通过。
 
 ## 非目标
@@ -271,3 +273,6 @@ Flutter App Shell
 ## 修订记录
 
 - 2026-08-27：根据 Flutter CLI 实际生成结果，补充 `mobile/test/widget_test.dart` 的删除范围，避免默认测试入口与验证入口冲突。
+- 2026-08-27：实测发现 `flutter_scene` 0.23.0 与 `flutter_scene_rapier` 0.5.0 依赖冲突；改用已解析通过的 `flutter_scene` 0.19.0 与 `flutter_scene_rapier` 0.2.2 作为验证基线。
+- 2026-08-27：根据 Task 2 实施前检查，补充 `ValidationApp` 作为场景视图集成点。
+- 2026-08-27：根据 iOS 真机运行错误，补充 iOS Info.plist 与 Android Manifest 的 Flutter GPU 开关配置范围。

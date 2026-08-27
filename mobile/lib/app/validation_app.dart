@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_scene/scene.dart';
 
 import 'lifecycle_controller.dart';
+import '../scene/scene_adapter.dart';
 
 enum ValidationSessionState { idle, running, paused }
 
 class ValidationApp extends StatefulWidget {
-  const ValidationApp({super.key});
+  const ValidationApp({super.key, this.enable3d = true});
+
+  final bool enable3d;
 
   @override
   ValidationAppState createState() => ValidationAppState();
@@ -14,6 +18,8 @@ class ValidationApp extends StatefulWidget {
 class ValidationAppState extends State<ValidationApp>
     with WidgetsBindingObserver {
   final LifecycleController lifecycle = LifecycleController();
+  SceneAdapter? _sceneAdapter;
+  bool _sceneReady = false;
 
   @override
   void initState() {
@@ -31,6 +37,21 @@ class ValidationAppState extends State<ValidationApp>
   }
 
   void _onLifecycleChanged() => setState(() {});
+
+  void _startValidation() {
+    lifecycle.start();
+    if (widget.enable3d) _loadScene();
+  }
+
+  Future<void> _loadScene() async {
+    final adapter = SceneAdapter();
+    await adapter.initialize();
+    if (!mounted) return;
+    setState(() {
+      _sceneAdapter = adapter;
+      _sceneReady = true;
+    });
+  }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -63,9 +84,16 @@ class ValidationAppState extends State<ValidationApp>
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
               const SizedBox(height: 24),
+              if (isRunning && _sceneReady && widget.enable3d)
+                Expanded(
+                  child: SceneView(
+                    _sceneAdapter!.scene,
+                    camera: _sceneAdapter!.camera,
+                  ),
+                ),
               if (!isRunning && !isPaused)
                 FilledButton(
-                  onPressed: lifecycle.start,
+                  onPressed: _startValidation,
                   child: const Text('开始验证'),
                 ),
               if (isPaused)
