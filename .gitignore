@@ -2,3 +2,5 @@ node_modules/
 dist/
 .firecrawl/
 .project-kit/
+.vscode/
+tmp/

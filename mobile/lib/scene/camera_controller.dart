@@ -5,7 +5,8 @@ class ValidationCameraController {
   const ValidationCameraController();
 
   PerspectiveCamera create() => PerspectiveCamera(
-    position: vm.Vector3(0, 4.4, 13.5),
-    target: vm.Vector3(0, 2.4, 0),
+    position: vm.Vector3(0, 1.85, 6.4),
+    target: vm.Vector3(0, 1.35, 0),
+    fovRadiansY: 0.72,
   );
 }
