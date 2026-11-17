@@ -57,6 +57,38 @@ export function createOfficeRenderer(ctx, geo = {}) {
   let lightCanvas = null
   let lightCtx = null
 
+  // 玩家自定义老板形象配置
+  let bossProfile = {
+    name: '王总',
+    catchphrase: '今天简单讲两句！',
+    hair: 'combover',   // 'combover' | 'slick' | 'afro' | 'bald' | 'perm' | 'bun'
+    glasses: 'shades',  // 'shades' | 'gold_rim' | 'thick_frame' | 'monocle' | 'sharp'
+    suit: 'navy_gold',  // 'navy_gold' | 'burgundy' | 'polo' | 'tech_vest' | 'queen_red' | 'white_chain'
+    beard: 'mustache',  // 'mustache' | 'goatee' | 'full_beard' | 'lipstick' | 'clean'
+    bodyShape: 'chubby' // 'chubby' | 'normal' | 'wide'
+  }
+
+  const SUIT_STYLES = {
+    navy_gold: { body: '#2b2d42', tie: '#ffbe0b' },
+    burgundy: { body: '#800f2f', tie: '#2b2d42' },
+    polo: { body: '#2d6a4f', tie: null, polo: true },
+    tech_vest: { body: '#495057', tie: '#4cc9f0' },
+    queen_red: { body: '#d90429', tie: null, pearls: true },
+    white_chain: { body: '#f8f9fa', tie: null, goldChain: true }
+  }
+
+  function setBossProfile(next = {}) {
+    bossProfile = { ...bossProfile, ...next }
+    const st = SUIT_STYLES[bossProfile.suit] || SUIT_STYLES.navy_gold
+    LOOKS.boss.body = st.body
+    LOOKS.boss.tie = st.tie
+    LOOKS.boss.polo = Boolean(st.polo)
+    LOOKS.boss.pearls = Boolean(st.pearls)
+    LOOKS.boss.goldChain = Boolean(st.goldChain)
+    LOOKS.boss.belly = bossProfile.bodyShape !== 'normal'
+    LOOKS.boss.wide = bossProfile.bodyShape === 'wide'
+  }
+
   function sync(a, b) {
     if (a && typeof a === 'object' && ('grid' in a || 'player' in a || 'objects' in a)) {
       lastGame = a
@@ -117,8 +149,14 @@ export function createOfficeRenderer(ctx, geo = {}) {
     }
   }
 
+  const replaceBossName = s => {
+    const str = String(s ?? '')
+    return bossProfile.name && bossProfile.name !== '王总' ? str.replaceAll('王总', bossProfile.name) : str
+  }
+
   function text(t, x, y, { size = 11, weight = 900, color = INK, align = 'left', stroke = null, sw = 3.5, base = 'alphabetic', max } = {}) {
     if (t === undefined || t === null || t === '') return
+    const str = replaceBossName(t)
     ctx.font = FONT(size, weight)
     ctx.textAlign = align
     ctx.textBaseline = base
@@ -126,10 +164,10 @@ export function createOfficeRenderer(ctx, geo = {}) {
       ctx.lineJoin = 'round'
       ctx.strokeStyle = stroke
       ctx.lineWidth = sw
-      ctx.strokeText(String(t), x, y, max)
+      ctx.strokeText(str, x, y, max)
     }
     ctx.fillStyle = color
-    ctx.fillText(String(t), x, y, max)
+    ctx.fillText(str, x, y, max)
     ctx.textAlign = 'left'
     ctx.textBaseline = 'alphabetic'
   }
@@ -181,7 +219,7 @@ export function createOfficeRenderer(ctx, geo = {}) {
     ctx.font = FONT(size)
     const lines = []
     let line = ''
-    for (const ch of String(t)) {
+    for (const ch of replaceBossName(t)) {
       if (ctx.measureText(line + ch).width > maxW) {
         lines.push(line)
         line = ch
@@ -196,8 +234,9 @@ export function createOfficeRenderer(ctx, geo = {}) {
   // 防重叠胶囊气泡标签
   function pill(label, cx, cy, { size = 8.5, bg = '#fffdf5', fg = INK, border = INK, lw = 1.7, avoidOverlap = true } = {}) {
     if (!label) return
+    const str = replaceBossName(label)
     ctx.font = FONT(size, 800)
-    const tw = Math.min(MAP_SW - 12, ctx.measureText(label).width + 10)
+    const tw = Math.min(MAP_SW - 12, ctx.measureText(str).width + 10)
     const th = size + 7
     let x = Math.max(OX + 3, Math.min(OX + MAP_SW - tw - 3, cx - tw / 2))
     let y = Math.max(OY + 3, Math.min(OY + MAP_SH - th - 3, cy - th / 2))
@@ -1456,18 +1495,81 @@ export function createOfficeRenderer(ctx, geo = {}) {
       skin: '#ffcf9e',
       scale: 1.22,
       belly: true,
+      wide: false,
       tie: '#ffbe0b',
+      polo: false,
+      pearls: false,
+      goldChain: false,
       customEyes: true,
+      back: (hx, hy, r) => {
+        if (bossProfile.hair === 'perm') {
+          circle(hx - r + 1, hy + 1, 5.5, '#4a2511', INK, 1.8)
+          circle(hx + r - 1, hy + 1, 5.5, '#4a2511', INK, 1.8)
+        } else if (bossProfile.hair === 'bun') {
+          circle(hx, hy - r - 3.5, 5, '#22223b', INK, 1.8)
+        } else if (bossProfile.hair === 'afro') {
+          circle(hx, hy - 3, r + 4, '#2b2d42', INK, 2)
+        }
+      },
       front: (hx, hy, r, f, opts, clock) => {
-        if (opts.wigLost) {
+        const isBald = opts.wigLost || bossProfile.hair === 'bald'
+        if (isBald) {
           // 爆笑地中海两侧残发 + 亮晶晶反光大秃头！
           circle(hx - r + 1, hy - 1, 3.2, '#2b2d42', INK, 1.3)
           circle(hx + r - 1, hy - 1, 3.2, '#2b2d42', INK, 1.3)
           ellipse(hx - 2.5, hy - r + 4.2, 4.8, 2.5, -0.35, 'rgba(255,255,255,0.92)', null, 0)
           const twinkle = 3.2 + Math.sin(clock * 12) * 1.3
           star4(hx + 3.5, hy - r + 3, twinkle, twinkle * 0.38, '#ffffff', '#ffd166', 0.6)
+        } else if (bossProfile.hair === 'slick') {
+          // 大背头油头霸总（挑高刘海 + 金色发胶高光）
+          ctx.fillStyle = '#1b1b2f'
+          ctx.beginPath()
+          ctx.arc(hx, hy - 2.5, r + 1.4, Math.PI * 0.96, Math.PI * 2.04)
+          ctx.fill()
+          ctx.strokeStyle = INK
+          ctx.lineWidth = 1.8
+          ctx.stroke()
+          ellipse(hx, hy - r - 0.5, 5.5, 2.8, -0.15, '#1b1b2f', INK, 1.6)
+          ellipse(hx - 1.5, hy - r + 1, 4, 1.3, -0.2, 'rgba(255,209,102,0.55)', null, 0)
+        } else if (bossProfile.hair === 'afro') {
+          // 蓬松爆炸卷毛头
+          for (const [ox, oy, cr] of [
+            [-7, -5, 5],
+            [-3.5, -9, 5.5],
+            [2, -9.5, 5.5],
+            [7, -5.5, 5],
+            [0, -7, 6]
+          ]) {
+            circle(hx + ox, hy + oy, cr, '#2b2d42', INK, 1.5)
+          }
+        } else if (bossProfile.hair === 'perm') {
+          // 女魔头精致大波浪卷发 + 金耳环
+          ctx.fillStyle = '#4a2511'
+          ctx.beginPath()
+          ctx.arc(hx, hy - 2, r + 1.5, Math.PI * 0.92, Math.PI * 2.08)
+          ctx.fill()
+          ctx.strokeStyle = INK
+          ctx.lineWidth = 1.7
+          ctx.stroke()
+          circle(hx - r - 0.5, hy + 2, 2.2, '#ffd166', INK, 1)
+          circle(hx + r + 0.5, hy + 2, 2.2, '#ffd166', INK, 1)
+        } else if (bossProfile.hair === 'bun') {
+          // 干练铁娘子丸子头 + 金发簪
+          ctx.fillStyle = '#22223b'
+          ctx.beginPath()
+          ctx.arc(hx, hy - 2, r + 0.8, Math.PI * 0.98, Math.PI * 2.02)
+          ctx.fill()
+          ctx.strokeStyle = INK
+          ctx.lineWidth = 1.6
+          ctx.stroke()
+          ctx.strokeStyle = '#ffd166'
+          ctx.lineWidth = 2
+          ctx.beginPath()
+          ctx.moveTo(hx - 7, hy - r - 3)
+          ctx.lineTo(hx + 7, hy - r - 4)
+          ctx.stroke()
         } else {
-          // 浓密假发套（带高光发际线）
+          // 经典三七分浓密假发套（带高光发际线）
           ctx.fillStyle = '#22223b'
           ctx.beginPath()
           ctx.arc(hx, hy - 2, r + 1.2, Math.PI * 0.98, Math.PI * 2.02)
@@ -1477,16 +1579,84 @@ export function createOfficeRenderer(ctx, geo = {}) {
           ctx.stroke()
           ellipse(hx - 3, hy - r + 2.5, 3.8, 1.6, -0.3, 'rgba(255,255,255,0.45)', null, 0)
         }
+
         if (f.back) return
-        // 老板墨镜与小胡子 + 腮红
+        // 腮红
         ellipse(hx - 6.5, hy + 3.5, 2.5, 1.4, 0, 'rgba(255,105,140,0.45)', null, 0)
         ellipse(hx + 6.5, hy + 3.5, 2.5, 1.4, 0, 'rgba(255,105,140,0.45)', null, 0)
-        rr(hx - 7.5 + f.ex, hy - 2 + f.ey, 6.5, 4.5, 1.8, INK, null, 0)
-        rr(hx + 1 + f.ex, hy - 2 + f.ey, 6.5, 4.5, 1.8, INK, null, 0)
-        ctx.fillStyle = INK
-        ctx.fillRect(hx - 1 + f.ex, hy - 1 + f.ey, 2, 1.5)
-        ellipse(hx - 3 + f.ex, hy + 5 + f.ey, 3.4, 1.5, 0.2, '#3d2b1f', null, 0)
-        ellipse(hx + 3 + f.ex, hy + 5 + f.ey, 3.4, 1.5, -0.2, '#3d2b1f', null, 0)
+
+        // 眼镜 / 眼神款式
+        const gl = bossProfile.glasses || 'shades'
+        if (gl === 'shades') {
+          rr(hx - 7.5 + f.ex, hy - 2 + f.ey, 6.5, 4.5, 1.8, INK, null, 0)
+          rr(hx + 1 + f.ex, hy - 2 + f.ey, 6.5, 4.5, 1.8, INK, null, 0)
+          ctx.fillStyle = INK
+          ctx.fillRect(hx - 1 + f.ex, hy - 1 + f.ey, 2, 1.5)
+        } else if (gl === 'gold_rim') {
+          circle(hx - 3.8 + f.ex, hy + 0.2 + f.ey, 3.4, 'rgba(255,255,255,0.35)', '#d48c00', 1.5)
+          circle(hx + 3.8 + f.ex, hy + 0.2 + f.ey, 3.4, 'rgba(255,255,255,0.35)', '#d48c00', 1.5)
+          circle(hx - 3.8 + f.ex, hy + 0.2 + f.ey, 1.4, INK, null, 0)
+          circle(hx + 3.8 + f.ex, hy + 0.2 + f.ey, 1.4, INK, null, 0)
+        } else if (gl === 'thick_frame') {
+          rr(hx - 7.2 + f.ex, hy - 2 + f.ey, 6.2, 4.4, 1.2, 'rgba(255,255,255,0.45)', INK, 1.7)
+          rr(hx + 1 + f.ex, hy - 2 + f.ey, 6.2, 4.4, 1.2, 'rgba(255,255,255,0.45)', INK, 1.7)
+          circle(hx - 4.1 + f.ex, hy + 0.2 + f.ey, 1.3, INK, null, 0)
+          circle(hx + 4.1 + f.ex, hy + 0.2 + f.ey, 1.3, INK, null, 0)
+        } else if (gl === 'monocle') {
+          circle(hx - 3.8 + f.ex, hy + 0.3 + f.ey, 1.6, INK, null, 0)
+          circle(hx + 3.8 + f.ex, hy + 0.2 + f.ey, 3.6, 'rgba(144,224,239,0.45)', '#ffd166', 1.6)
+          circle(hx + 3.8 + f.ex, hy + 0.3 + f.ey, 1.4, INK, null, 0)
+          ctx.strokeStyle = '#ffd166'
+          ctx.lineWidth = 1.1
+          ctx.beginPath()
+          ctx.moveTo(hx + 7 + f.ex, hy + 1 + f.ey)
+          ctx.lineTo(hx + 6.5 + f.ex, hy + 6 + f.ey)
+          ctx.stroke()
+        } else {
+          // 犀利死鱼眼
+          circle(hx - 3.8 + f.ex, hy + 0.4 + f.ey, 1.8, INK, null, 0)
+          circle(hx + 3.8 + f.ex, hy + 0.4 + f.ey, 1.8, INK, null, 0)
+          ctx.strokeStyle = INK
+          ctx.lineWidth = 1.6
+          ctx.beginPath()
+          ctx.moveTo(hx - 6.5 + f.ex, hy - 1.5 + f.ey)
+          ctx.lineTo(hx - 1.2 + f.ex, hy - 0.8 + f.ey)
+          ctx.moveTo(hx + 1.2 + f.ex, hy - 0.8 + f.ey)
+          ctx.lineTo(hx + 6.5 + f.ex, hy - 1.5 + f.ey)
+          ctx.stroke()
+        }
+
+        // 胡须 / 红唇特征
+        const bd = bossProfile.beard || 'mustache'
+        if (bd === 'mustache') {
+          ellipse(hx - 3 + f.ex, hy + 5 + f.ey, 3.4, 1.5, 0.2, '#3d2b1f', null, 0)
+          ellipse(hx + 3 + f.ex, hy + 5 + f.ey, 3.4, 1.5, -0.2, '#3d2b1f', null, 0)
+        } else if (bd === 'goatee') {
+          ellipse(hx + f.ex, hy + 4.6 + f.ey, 3.2, 1.2, 0, '#3d2b1f', null, 0)
+          ctx.fillStyle = '#3d2b1f'
+          ctx.beginPath()
+          ctx.moveTo(hx - 2.2 + f.ex, hy + 6.5 + f.ey)
+          ctx.lineTo(hx + 2.2 + f.ex, hy + 6.5 + f.ey)
+          ctx.lineTo(hx + f.ex, hy + 10.5 + f.ey)
+          ctx.closePath()
+          ctx.fill()
+        } else if (bd === 'full_beard') {
+          ctx.fillStyle = 'rgba(43,45,66,0.75)'
+          ctx.beginPath()
+          ctx.arc(hx + f.ex * 0.4, hy + 1, r - 0.5, 0.15, Math.PI - 0.15)
+          ctx.fill()
+          rr(hx - 2.2 + f.ex, hy + 4.5 + f.ey, 4.4, 2, 1, '#ffcf9e', null, 0)
+        } else if (bd === 'lipstick') {
+          ellipse(hx + f.ex, hy + 5.2 + f.ey, 2.8, 1.5, 0, '#e63946', '#9b0000', 0.8)
+          circle(hx + 4.8 + f.ex, hy + 3.2 + f.ey, 0.9, INK, null, 0) // 美人痣
+        } else {
+          // 双下巴微笑弧线
+          ctx.strokeStyle = 'rgba(156,102,68,0.65)'
+          ctx.lineWidth = 1.2
+          ctx.beginPath()
+          ctx.arc(hx + f.ex, hy + 4.5 + f.ey, 3.2, 0.2, Math.PI - 0.2)
+          ctx.stroke()
+        }
       }
     },
     hr: {
@@ -1598,10 +1768,27 @@ export function createOfficeRenderer(ctx, geo = {}) {
     rr(-5.5, 3 - bob + leg * 0.3, 4.5, 6 + leg, 2, INK, null, 0)
     rr(1, 3 - bob - leg * 0.3, 4.5, 6 - leg, 2, INK, null, 0)
 
-    // 身体西装/工装 + 领带/蓝色工牌挂绳
-    const bw = look.belly ? 20 : 16.5
+    // 身体西装/工装 + 领带/珍珠项链/大金链/Polo条纹/蓝色工牌挂绳
+    const bw = look.wide ? 22.5 : look.belly ? 20 : 16.5
     rr(-bw / 2, -7 - bob, bw, 13.5, 6, look.body, INK, 2.2)
-    if (look.tie) {
+    if (look.polo) {
+      ctx.fillStyle = '#ffd166'
+      ctx.fillRect(-bw / 2 + 2, -2 - bob, bw - 4, 2)
+      ctx.fillStyle = '#1b4332'
+      ctx.fillRect(-bw / 2 + 2, 3 - bob, bw - 4, 2.2)
+      rr(-2.5, 2.5 - bob, 5, 3, 1, '#ffd166', INK, 0.9)
+    } else if (look.pearls) {
+      for (let i = -2; i <= 2; i++) {
+        circle(i * 2.2, -5.2 - bob + Math.abs(i) * 0.4, 1.3, '#fffdf5', INK, 0.7)
+      }
+    } else if (look.goldChain) {
+      ctx.strokeStyle = '#ffb703'
+      ctx.lineWidth = 2
+      ctx.beginPath()
+      ctx.arc(0, -5.5 - bob, 4.5, 0.2, Math.PI - 0.2)
+      ctx.stroke()
+      circle(0, -0.5 - bob, 2.2, '#ffd166', INK, 0.9)
+    } else if (look.tie) {
       ctx.fillStyle = '#ffffff'
       ctx.beginPath()
       ctx.moveTo(-3.5, -7 - bob)
@@ -2349,6 +2536,8 @@ export function createOfficeRenderer(ctx, geo = {}) {
     drawLighting,
     drawThoughts,
     drawChibi,
+    setBossProfile,
+    getBossProfile: () => ({ ...bossProfile }),
     LOOKS
   }
 }

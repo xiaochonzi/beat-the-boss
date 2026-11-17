@@ -12,6 +12,7 @@ import {
 } from './stealthGame.js'
 import { createOfficeRenderer } from './officeRenderer.js'
 import { createBgmController } from './bgm.js'
+import { createBossCustomizer } from './bossCustomizer.js'
 import './style.css'
 
 // ================= 竖屏手机画布 (390 x 844) =================
@@ -124,6 +125,8 @@ const BTN = {
   hint: { x: 360, y: 23, r: 16 }
 }
 const TOP_MENU_RECT = { x: 8, y: 6, w: 254, h: 34 }
+const INTRO_BOSS_BTN = { x: 196, y: 43, w: 66, h: 30 }
+const INTRO_AVATAR_BTN = { x: 20, y: 330, w: 60, h: 80 }
 const INTRO_MUSIC_BTN = { x: 351, y: 58, r: 15 }
 const TASK_BAR_RECT = { x: 8, y: OY + MAP_SH + 8, w: 240, h: 26 }
 
@@ -228,6 +231,14 @@ const bgm = createBgmController()
 let level = 1
 let introChapter = 1
 let game = createStealthGame(level)
+const bossEditor = createBossCustomizer({
+  onUpdate(prof) {
+    renderer.setBossProfile(prof)
+    bossEditor.applyToGame(game)
+  }
+})
+renderer.setBossProfile(bossEditor.getProfile())
+bossEditor.applyToGame(game)
 let phase = 'intro'
 let lastTime = 0
 let clock = 0
@@ -588,6 +599,7 @@ function loadLevel(lvl = level, skipIntro = false) {
   const clamped = Math.max(1, Math.min(TOTAL_LEVELS, Number(lvl) || 1))
   level = clamped
   game = createStealthGame(level)
+  bossEditor.applyToGame(game)
   introChapter = game.cfg.chapter || 1
   phase = skipIntro ? 'play' : 'intro'
   floats = []
@@ -724,8 +736,20 @@ canvas.addEventListener('pointerdown', e => {
   audio = bgm.unlock() || audio
   syncBgmTrack()
 
-  // 1) 选关弹窗交互（5大章节Tab + 当前章关卡卡 + 16关速跳点 + 左右翻关 + 音乐开关 + 立刻开工）
+  // 0) 捏老板工坊弹窗优先响应点击
+  if (bossEditor.handlePointerDown(p, () => sfx('tap'))) {
+    buzz(10)
+    return
+  }
+
+  // 1) 选关弹窗交互（定制老板 + 5大章节Tab + 当前章关卡卡 + 16关速跳点 + 左右翻关 + 音乐开关 + 立刻开工）
   if (phase === 'intro') {
+    if (inRect(p, INTRO_BOSS_BTN, 4) || inRect(p, INTRO_AVATAR_BTN, 4)) {
+      bossEditor.openModal()
+      sfx('tap')
+      buzz(10)
+      return
+    }
     if (inCircle(p.x, p.y, INTRO_MUSIC_BTN, 5)) {
       toggleSound()
       buzz(10)
@@ -945,6 +969,7 @@ function text(
   y,
   { size = 12, weight = 900, color = INK, align = 'left', stroke = null, sw = 4, base = 'alphabetic', max } = {}
 ) {
+  const str = bossEditor.replaceName(String(t ?? ''))
   ctx.font = FONT(size, weight)
   ctx.textAlign = align
   ctx.textBaseline = base
@@ -952,10 +977,10 @@ function text(
     ctx.lineJoin = 'round'
     ctx.strokeStyle = stroke
     ctx.lineWidth = sw
-    ctx.strokeText(t, x, y, max)
+    ctx.strokeText(str, x, y, max)
   }
   ctx.fillStyle = color
-  ctx.fillText(t, x, y, max)
+  ctx.fillText(str, x, y, max)
   ctx.textAlign = 'left'
   ctx.textBaseline = 'alphabetic'
 }
@@ -970,18 +995,19 @@ function emoji(ch, x, y, size = 16) {
 }
 
 function pill(t, cx, cy, { size = 9, bg = '#fffdf5', fg = INK, border = INK, lw = 1.8 } = {}) {
+  const str = bossEditor.replaceName(String(t ?? ''))
   ctx.font = FONT(size)
-  const tw = ctx.measureText(t).width + 12
+  const tw = ctx.measureText(str).width + 12
   const x = Math.max(OX + 2, Math.min(OX + MAP_SW - tw - 2, cx - tw / 2))
   rr(x, cy - size / 2 - 4, tw, size + 8, (size + 8) / 2, bg, border, lw)
-  text(t, x + tw / 2, cy + 0.5, { size, color: fg, align: 'center', base: 'middle' })
+  text(str, x + tw / 2, cy + 0.5, { size, color: fg, align: 'center', base: 'middle' })
 }
 
 function wrapLines(t, maxW, size) {
   ctx.font = FONT(size)
   const lines = []
   let line = ''
-  for (const ch of String(t || '')) {
+  for (const ch of bossEditor.replaceName(String(t || ''))) {
     if (ctx.measureText(line + ch).width > maxW) {
       lines.push(line)
       line = ch
@@ -1970,6 +1996,8 @@ function drawOverlays(dt) {
 
   if (phase === 'intro') drawIntro()
   else if (s.gameState !== 'playing') drawEnd(s)
+
+  bossEditor.drawModal(ctx, renderer, { VW, VH, INK, rr, circle, text }, clock)
 }
 
 // ================= 16关全解锁 · 5大章节选关弹窗 =================
@@ -1982,26 +2010,35 @@ function drawIntro() {
   const activeChap = CHAPTERS.find(c => c.id === introChapter) || CHAPTERS[0]
   const cfg = game.cfg
   const meta = MODE_META[cfg.mode] || MODE_META.stealth
+  const bProf = bossEditor.getProfile()
 
   // 弹窗外框
   rr(x, 30, w, 778, 24, '#fffdf5', INK, 3.5)
 
   // 1) 顶部主题横幅 (y: 30..92)
   rr(x, 30, w, 62, [24, 24, 0, 0], activeChap.color, INK, 3.5)
-  text('牛马求生记：反坑大老板', x + 16, 57, {
-    size: 18.5,
+  text('牛马求生记：反坑大老板', x + 14, 56, {
+    size: 16,
     color: '#ffffff',
     stroke: INK,
-    sw: 4.5
+    sw: 4.2
   })
-  text('5大章节 · 16关多元脑洞玩法全解锁！', x + 16, 78, {
-    size: 10,
-    color: 'rgba(255,255,255,0.92)'
+  text(`当前怨种老板：【${bProf.name}】· 点右侧可换形象`, x + 14, 78, {
+    size: 9.2,
+    color: 'rgba(255,255,255,0.94)'
   })
-  // 总星级徽章 + 顶部音乐开关
-  rr(x + w - 126, 43, 74, 30, 15, '#2b2d42', '#ffd166', 2)
-  text(`★ ${totalStarsEarned()}/${TOTAL_LEVELS * 3}`, x + w - 89, 62.5, {
-    size: 11,
+
+  // 【👔换老板】入口按钮 + 总星级徽章 + 顶部音乐开关
+  rr(INTRO_BOSS_BTN.x, INTRO_BOSS_BTN.y, INTRO_BOSS_BTN.w, INTRO_BOSS_BTN.h, 15, '#ffbe0b', INK, 2.2)
+  text('👔换老板', INTRO_BOSS_BTN.x + INTRO_BOSS_BTN.w / 2, 62, {
+    size: 10.5,
+    color: INK,
+    align: 'center'
+  })
+
+  rr(266, 43, 64, 30, 15, '#2b2d42', '#ffd166', 2)
+  text(`★ ${totalStarsEarned()}/${TOTAL_LEVELS * 3}`, 298, 62.5, {
+    size: 10.2,
     color: '#ffd166',
     align: 'center'
   })
@@ -2141,11 +2178,11 @@ function drawIntro() {
     text(l, x + 78, qy + 18 + i * 14.5, { size: 10, color: '#2b2d42' })
   )
 
-  // 左侧Q版立绘（第11关扮演王总时画戴皇冠拿喇叭的主角，第4关画假发危机王总）
+  // 左侧Q版立绘（点击立绘也可打开捏老板工坊！）
   if (cfg.mode === 'be_the_boss') {
     renderer.drawChibi(
       x + 38,
-      qy + qh / 2 + 12,
+      qy + qh / 2 + 6,
       'player',
       Math.PI / 2,
       { crown: true, megaphone: true, moving: true },
@@ -2154,13 +2191,15 @@ function drawIntro() {
   } else {
     renderer.drawChibi(
       x + 38,
-      qy + qh / 2 + 12,
+      qy + qh / 2 + 6,
       'boss',
       Math.PI / 2,
       { mood: 'angry', wigLost: level === 4 || level === 16 },
       clock
     )
   }
+  rr(x + 12, qy + qh - 12, 52, 16, 8, '#ffbe0b', INK, 1.5)
+  text('✏️捏老板', x + 38, qy + qh - 1, { size: 7.8, color: INK, align: 'center' })
 
   let cy = qy + qh + 14
 
