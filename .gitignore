@@ -4,3 +4,4 @@ dist/
 .project-kit/
 .vscode/
 tmp/
+.DS_Store

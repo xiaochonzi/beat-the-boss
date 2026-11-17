@@ -1,26 +1,9 @@
 {
-  "name": "beat-the-boss-3d",
-  "private": true,
-  "version": "1.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite --host 0.0.0.0",
-    "build": "vue-tsc -b && vite build",
-    "preview": "vite preview --host 0.0.0.0"
-  },
-  "dependencies": {
-    "@dimforge/rapier3d-compat": "latest",
-    "@vitejs/plugin-vue": "latest",
-    "gsap": "latest",
-    "howler": "latest",
-    "three": "latest",
-    "vue": "latest"
-  },
-  "devDependencies": {
-    "@types/howler": "latest",
-    "@types/three": "latest",
-    "typescript": "~5.9.3",
-    "vite": "latest",
-    "vue-tsc": "latest"
-  }
+  "name":"beat-the-boss-experiment",
+  "version":"0.1.0",
+  "private":true,
+  "type":"module",
+  "scripts":{"dev":"vite --host 0.0.0.0","build":"vite build","test":"node --test tests/*.test.js"},
+  "dependencies":{"matter-js":"^0.20.0"},
+  "devDependencies":{"vite":"^6.1.0"}
 }
