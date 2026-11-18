@@ -1044,6 +1044,8 @@ export function createOfficeRenderer(ctx, geo = {}) {
 
   function drawFocusOverlay(a, b) {
     const { game } = sync(a, b)
+    const theme = game?.cfg?.sceneTheme || 'full_office'
+    if (theme !== 'full_office') return
     const focus = game?.cfg?.focusZones
     if (!Array.isArray(focus) || focus.length === 0) return
     const active = new Set(focus)
@@ -1067,7 +1069,10 @@ export function createOfficeRenderer(ctx, geo = {}) {
     if (!game?.grid) return
     const theme = game.cfg?.sceneTheme || 'full_office'
     const labels = SCENE_LABELS[theme] || ZONE_META
-    const focus = Array.isArray(game.cfg?.focusZones) ? new Set(game.cfg.focusZones) : null
+    const focus =
+      theme === 'full_office' && Array.isArray(game.cfg?.focusZones)
+        ? new Set(game.cfg.focusZones)
+        : null
 
     for (const zm of labels) {
       if (tileAt(game, zm.lc, zm.lr) === T_WALL) continue

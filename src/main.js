@@ -311,7 +311,7 @@ function updateTutorial(dt) {
   }
   if (!tutorialActive && tutorialQueue.length > 0) {
     tutorialActive = tutorialQueue.shift()
-    tutorialTimer = 8
+    tutorialTimer = 4.6
     tutorialSeen[tutorialActive.key] = true
     saveTutorialSeen()
   }
@@ -2139,9 +2139,9 @@ function drawOverlays(dt) {
     )
   }
 
-  // 首次触发动机提示横幅（只出现一次，4.2 秒自动消失）
+  // 首次触发动机提示横幅（只出现一次，4.6 秒自动消失）
   if (tutorialActive && phase === 'play' && s.gameState === 'playing') {
-    const fadeIn = Math.min(1, (8 - tutorialTimer) / 0.25)
+    const fadeIn = Math.min(1, (4.6 - tutorialTimer) / 0.25)
     const fadeOut = Math.min(1, tutorialTimer / 0.4)
     const alpha = Math.max(0, Math.min(fadeIn, fadeOut))
     ctx.save()
