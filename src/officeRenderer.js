@@ -29,6 +29,21 @@ const ZONE_META = [
   { key: 'restroom', c1: 12, r1: 7, c2: 16, r2: 11, bg: '#e6f7fc', label: '🚽 摸鱼厕', lc: 12, lr: 7 }
 ]
 
+const FOCUS_ZONE_RECTS = {
+  tea: { c1: 1, r1: 1, c2: 5, r2: 4 },
+  ceo: { c1: 6, r1: 1, c2: 10, r2: 4 },
+  cubicles: { c1: 11, r1: 1, c2: 16, r2: 6 },
+  lobby: { c1: 1, r1: 5, c2: 11, r2: 11 },
+  restroom: { c1: 12, r1: 7, c2: 16, r2: 11 }
+}
+
+function zoneKeyAt(col, row) {
+  for (const [key, zz] of Object.entries(FOCUS_ZONE_RECTS)) {
+    if (col >= zz.c1 && col <= zz.c2 && row >= zz.r1 && row <= zz.r2) return key
+  }
+  return null
+}
+
 function hash01(a, b, seed = 0) {
   const n = Math.sin(a * 127.1 + b * 311.7 + seed * 74.7) * 43758.5453
   return n - Math.floor(n)
@@ -1027,14 +1042,36 @@ export function createOfficeRenderer(ctx, geo = {}) {
     ]
   }
 
+  function drawFocusOverlay(a, b) {
+    const { game } = sync(a, b)
+    const focus = game?.cfg?.focusZones
+    if (!Array.isArray(focus) || focus.length === 0) return
+    const active = new Set(focus)
+    ctx.save()
+    ctx.beginPath()
+    ctx.roundRect(OX, OY, MAP_SW, MAP_SH, 10)
+    ctx.clip()
+    for (const [key, zz] of Object.entries(FOCUS_ZONE_RECTS)) {
+      if (active.has(key)) continue
+      const { x, y } = tileRect(zz.c1, zz.r1)
+      const w = (zz.r2 - zz.r1 + 1) * T
+      const h = (zz.c2 - zz.c1 + 1) * T
+      ctx.fillStyle = 'rgba(255, 251, 242, 0.48)'
+      ctx.fillRect(x, y, w, h)
+    }
+    ctx.restore()
+  }
+
   function drawZoneLabels(a, b) {
     const { game } = sync(a, b)
     if (!game?.grid) return
     const theme = game.cfg?.sceneTheme || 'full_office'
     const labels = SCENE_LABELS[theme] || ZONE_META
+    const focus = Array.isArray(game.cfg?.focusZones) ? new Set(game.cfg.focusZones) : null
 
     for (const zm of labels) {
       if (tileAt(game, zm.lc, zm.lr) === T_WALL) continue
+      if (focus && !focus.has(zoneKeyAt(zm.lc, zm.lr))) continue
       const { x, y } = tileRect(zm.lc, zm.lr)
       ctx.font = FONT(8, 800)
       const tw = ctx.measureText(zm.label).width + 10
@@ -1475,6 +1512,7 @@ export function createOfficeRenderer(ctx, geo = {}) {
       body: '#4f8ef7',
       skin: '#ffd8a8',
       badge: true,
+      scale: 1.15,
       back: (hx, hy, r) => circle(hx, hy + 1, r + 2.8, '#3b6fd1', INK, 2),
       front: (hx, hy, r, f) => {
         if (f.back) return
@@ -1493,7 +1531,7 @@ export function createOfficeRenderer(ctx, geo = {}) {
     boss: {
       body: '#2b2d42',
       skin: '#ffcf9e',
-      scale: 1.22,
+      scale: 1.34,
       belly: true,
       wide: false,
       tie: '#ffbe0b',
@@ -2298,6 +2336,35 @@ export function createOfficeRenderer(ctx, geo = {}) {
           )
           if (pDizzy) statusIcon(p.x, p.y - 40, 'stunned', 0, clock)
 
+          // 纸箱 / 草丛限时倒计时环，让玩家能读出剩余安全窗口
+          const camo = pl.carton
+            ? { t: pl.cartonTimer || 0, max: 5, icon: '📦' }
+            : pl.hiding
+              ? { t: pl.hideTimer || 0, max: 4, icon: '🌿' }
+              : null
+          if (camo && camo.t > 0) {
+            const ratio = Math.max(0, Math.min(1, camo.t / camo.max))
+            const col = ratio > 0.55 ? '#80ed99' : ratio > 0.28 ? '#ffbe0b' : '#ff006e'
+            ctx.save()
+            ctx.lineWidth = 3.6
+            ctx.strokeStyle = 'rgba(43,45,66,0.28)'
+            ctx.beginPath()
+            ctx.arc(p.x, p.y - 4, 19, 0, Math.PI * 2)
+            ctx.stroke()
+            ctx.strokeStyle = col
+            ctx.beginPath()
+            ctx.arc(p.x, p.y - 4, 19, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * ratio)
+            ctx.stroke()
+            ctx.restore()
+            pill(`${camo.icon} ${camo.t.toFixed(1)}s`, p.x, p.y - 43, {
+              size: 8,
+              bg: 'rgba(43,45,66,0.92)',
+              fg: '#ffffff',
+              border: col,
+              lw: 2
+            })
+          }
+
           // 大喇叭声波震慑环（Lv11 我当王总）
           if ((pl.hornTimer || 0) > 0) {
             ctx.save()
@@ -2531,6 +2598,7 @@ export function createOfficeRenderer(ctx, geo = {}) {
     drawZoneLabels,
     drawFloorFx,
     drawProps,
+    drawFocusOverlay,
     drawCharacters,
     drawProjectilesAndExtras,
     drawLighting,

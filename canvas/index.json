@@ -5,12 +5,20 @@
     {
       "id": "4de50d70-447e-4352-956e-b0293a053f2f",
       "name": "设计问答总览"
+    },
+    {
+      "id": "feedback-plan-board",
+      "name": "玩家反馈与优化"
     }
   ],
   "documents": [
     {
       "id": "design-qa",
       "title": "《牛马求生记》设计问答"
+    },
+    {
+      "id": "player-feedback-plan",
+      "title": "《牛马求生记》玩家反馈与优化计划"
     }
   ]
 }

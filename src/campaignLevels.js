@@ -41,6 +41,20 @@ export const CHAPTERS = [
   }
 ]
 
+// 软性聚焦：每关只点亮与目标相关的区域，其余区域降权展示（不改碰撞）
+// 目标本身横跨 4–5 个区域的关卡不启用，避免整张地图都变暗
+export const LEVEL_FOCUS = {
+  1: ['lobby', 'cubicles'],
+  2: ['tea', 'lobby', 'cubicles'],
+  3: ['ceo', 'lobby', 'cubicles', 'restroom'],
+  4: ['lobby', 'tea'],
+  5: ['lobby', 'tea', 'cubicles'],
+  8: ['ceo', 'lobby', 'cubicles'],
+  9: ['lobby', 'restroom'],
+  14: ['ceo', 'lobby', 'cubicles', 'restroom'],
+  16: ['lobby', 'cubicles', 'restroom']
+}
+
 // 18列 x 13行 室内布局模板 ('#'=实墙, 'G'=透明玻璃, ','=响声地毯, 'H'=绿植掩体, 'D'=门禁闸机, '.'=地板)
 export const LAYOUT_TEMPLATES = {
   classic: [

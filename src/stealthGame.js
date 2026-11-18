@@ -4,10 +4,11 @@ import {
   TOTAL_LEVELS,
   CAMPAIGN_LEVELS,
   LAYOUT_TEMPLATES,
+  LEVEL_FOCUS,
   getCampaignLevel
 } from './campaignLevels.js'
 
-export { CHAPTERS, TOTAL_LEVELS, CAMPAIGN_LEVELS, LAYOUT_TEMPLATES, getCampaignLevel }
+export { CHAPTERS, TOTAL_LEVELS, CAMPAIGN_LEVELS, LAYOUT_TEMPLATES, LEVEL_FOCUS, getCampaignLevel }
 
 export const W = 960
 export const H = 620
@@ -121,6 +122,7 @@ function normalizeLevelConfig(raw) {
     sceneName: raw.sceneName || '全公司综合办公区全景',
     playerStart: { col: spawn.col, row: spawn.row },
     playerSpawn: { col: spawn.col, row: spawn.row },
+    focusZones: raw.focusZones || LEVEL_FOCUS[lvl] || null,
     guards: raw.guards || [],
     snitches: raw.snitches || [],
     cameras: raw.cameras || [],
@@ -179,6 +181,8 @@ export function createStealthGame(levelNum = 1) {
     bumpInvuln: 0,
     carton: false,
     cartonUses: cfg.cartonUses ?? 2,
+    cartonTimer: 0,
+    hideTimer: 0,
     hideBlown: false,
     wasOnHide: false,
     isMoving: false,
@@ -570,9 +574,15 @@ export function createStealthGame(levelNum = 1) {
     if (playerRole === 'boss') return false
     if (player.hiding) return false
     const dist = Math.hypot(player.x - obs.x, player.y - obs.y)
-    if (player.carton && !player.isMoving && dist > 32) return false
-    if (dist > obs.viewDist) return false
     const angToPlayer = Math.atan2(player.y - obs.y, player.x - obs.x)
+    // 纸箱伪装：站定可躲开余光，但被近距离正面直视会识破
+    if (player.carton && !player.isMoving && dist > 32) {
+      const directlyFaced =
+        dist < Math.min(obs.viewDist, 210) &&
+        normalizeAngleDiff(angToPlayer, obs.dirAngle) < 0.32
+      if (!directlyFaced) return false
+    }
+    if (dist > obs.viewDist) return false
     if (normalizeAngleDiff(angToPlayer, obs.dirAngle) > obs.fov / 2) return false
     return hasClearVisionRay(obs.x, obs.y, player.x, player.y)
   }
@@ -688,16 +698,17 @@ export function createStealthGame(levelNum = 1) {
       player.cartonUses--
     }
     player.carton = !player.carton
+    player.cartonTimer = player.carton ? 5 : 0
     player.workObj = null
     player.workProgress = 0
     pushEvent(
       'info',
-      player.carton ? '📦 套上顺丰纸箱！(站定隐身)' : '📦 掀开纸箱',
+      player.carton ? '📦 套上顺丰纸箱！(站定隐身 5秒)' : '📦 掀开纸箱',
       player.x,
       player.y - 24
     )
     statusText = player.carton
-      ? '📦 已躲进快递纸箱！原地站住不动时老板扫过也发现不了你！'
+      ? '📦 纸箱只能撑5秒！站定躲余光，被老板正面盯上会识破！'
       : '📦 已脱下纸箱，恢复正常潜行速度！'
     return true
   }
@@ -779,9 +790,9 @@ export function createStealthGame(levelNum = 1) {
     player.inventory.splice(idx, 1)
 
     if (item.id === 'soap') {
-      soapPuddles.push({ x: player.x, y: player.y, col: player.col, row: player.row })
+      soapPuddles.push({ x: player.x, y: player.y, col: player.col, row: player.row, life: 12 })
       pushEvent('soap', '🧼 地板涂满洗洁精!', player.x, player.y - 20)
-      statusText = '🧼 已在脚下涂满滑溜洗洁精！引诱敌人踩上来劈叉滑飞！'
+      statusText = '🧼 已在脚下涂满滑溜洗洁精！12秒内引诱敌人踩上来劈叉滑飞！'
       return true
     }
 
@@ -1479,6 +1490,12 @@ export function createStealthGame(levelNum = 1) {
     for (let i = coffeePuddles.length - 1; i >= 0; i--) {
       coffeePuddles[i].life -= dt
       if (coffeePuddles[i].life <= 0) coffeePuddles.splice(i, 1)
+    }
+
+    // Update soap puddles (12s lifetime)
+    for (let i = soapPuddles.length - 1; i >= 0; i--) {
+      soapPuddles[i].life -= dt
+      if (soapPuddles[i].life <= 0) soapPuddles.splice(i, 1)
     }
 
     // Update sliding rolling chairs!
@@ -2402,6 +2419,14 @@ export function createStealthGame(levelNum = 1) {
 
     // Tick player timers
     if (player.activeBuffTimer > 0) player.activeBuffTimer = Math.max(0, player.activeBuffTimer - dt)
+    if (player.carton && player.cartonTimer > 0) {
+      player.cartonTimer = Math.max(0, player.cartonTimer - dt)
+      if (player.cartonTimer <= 0) {
+        player.carton = false
+        pushEvent('warn', '📦 纸箱撑破了！', player.x, player.y - 24)
+        statusText = '📦 纸箱只能撑5秒！快找草丛或换下一个掩体！'
+      }
+    }
     if (player.exhaustTimer > 0) player.exhaustTimer = Math.max(0, player.exhaustTimer - dt)
     if (player.nitroTimer > 0) {
       player.nitroTimer = Math.max(0, player.nitroTimer - dt)
@@ -2509,11 +2534,24 @@ export function createStealthGame(levelNum = 1) {
 
     // Hiding in plant tile
     const onHide = !player.carton && !player.ridingChair && playerRole !== 'boss' && grid[player.row]?.[player.col] === T_HIDE
-    if (onHide && !player.wasOnHide && guards.some(g => g.state === 'chase' && clock - g.lastSeenAt < 0.4)) {
-      player.hideBlown = true
-      pushEvent('warn', '👀 当着老板的面钻草丛？没用！', player.x, player.y - 24)
+    if (onHide && !player.wasOnHide) {
+      player.hideTimer = 4
+      if (guards.some(g => g.state === 'chase' && clock - g.lastSeenAt < 0.4)) {
+        player.hideBlown = true
+        pushEvent('warn', '👀 当着老板的面钻草丛？没用！', player.x, player.y - 24)
+      }
     }
-    if (!onHide) player.hideBlown = false
+    if (!onHide) {
+      player.hideBlown = false
+      player.hideTimer = 0
+    } else if (!player.hideBlown) {
+      player.hideTimer = Math.max(0, player.hideTimer - dt)
+      if (player.hideTimer <= 0) {
+        player.hideBlown = true
+        pushEvent('warn', '🌿 藏太久露馅了！', player.x, player.y - 24)
+        statusText = '🌿 草丛只能躲4秒！快换位置或套纸箱！'
+      }
+    }
     player.wasOnHide = onHide
     player.hiding = onHide && !player.hideBlown
 
@@ -2803,6 +2841,8 @@ export function createStealthGame(levelNum = 1) {
         stamina: Math.round(player.stamina),
         sprinting: player.sprinting,
         carton: player.carton,
+        cartonTimer: Number((player.cartonTimer || 0).toFixed(1)),
+        hideTimer: Number((player.hideTimer || 0).toFixed(1)),
         hiding: player.hiding,
         clockedIn: player.clockedIn,
         carryingTakeout: player.carryingTakeout,

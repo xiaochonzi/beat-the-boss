@@ -41,67 +41,78 @@ const MODE_META = {
     color: '#2a9d8f',
     bg: '#d8f3dc',
     icon: '🕵️',
-    ctrl: '🕹️ 摇杆潜行(推到底冲刺) · 点地图自动寻路 · 📦纸箱站定隐身'
+    ctrl: '🕹️ 摇杆潜行(推到底冲刺) · 点地图自动寻路 · 📦纸箱站定隐身',
+    ctrlShort: '摇杆移动 · 点地寻路 · 纸箱限时隐身'
   },
   prank_hunt: {
     color: '#f77f00',
     bg: '#ffe8cc',
     icon: '🤡',
-    ctrl: '🕹️ 主动设局坑王总！靠近风扇/转椅/保温杯点右下大按钮整蛊'
+    ctrl: '🕹️ 主动设局坑王总！靠近风扇/转椅/保温杯点右下大按钮整蛊',
+    ctrlShort: '靠近机关点大按钮 · 风扇/转椅/保温杯'
   },
   chair_derby: {
     color: '#e63946',
     bg: '#ffe3e3',
     icon: '🏎️',
-    ctrl: '🕹️ 摇杆漂移飙椅！点【🚀氮气冲撞】无敌加速撞碎目标与拦路保安'
+    ctrl: '🕹️ 摇杆漂移飙椅！点【🚀氮气冲撞】无敌加速撞碎目标与拦路保安',
+    ctrlShort: '漂移撞目标 · 点氮气无敌冲撞'
   },
   pot_pong: {
     color: '#d90429',
     bg: '#ffd6e0',
     icon: '🍳',
-    ctrl: '🕹️ 正面硬刚不用躲！看准飞来的黑锅点【🏏反拍黑锅】轰回王总脸上'
+    ctrl: '🕹️ 正面硬刚不用躲！看准飞来的黑锅点【🏏反拍黑锅】轰回王总脸上',
+    ctrlShort: '看准黑锅点反拍 · 不用躲'
   },
   wake_coworkers: {
     color: '#0077b6',
     bg: '#caf0f8',
     icon: '⏰',
-    ctrl: '🕹️ 盯紧冒瞌睡泡的队友，赶在王总抓包前冲过去点【👋拍醒队友】'
+    ctrl: '🕹️ 盯紧冒瞌睡泡的队友，赶在王总抓包前冲过去点【👋拍醒队友】',
+    ctrlShort: '冲向瞌睡队友点拍醒'
   },
   be_the_boss: {
     color: '#9d4edd',
     bg: '#f3d9fa',
     icon: '👑',
-    ctrl: '🕹️ 今天你当王总！寻找微微发抖的纸箱/盆栽/隔间点【📣揪出摸鱼】'
+    ctrl: '🕹️ 今天你当王总！寻找微微发抖的纸箱/盆栽/隔间点【📣揪出摸鱼】',
+    ctrlShort: '点可疑纸箱/盆栽/隔间揪人'
   },
   desk_defense: {
     color: '#7209b7',
     bg: '#ede2ff',
     icon: '🛡️',
-    ctrl: '🕹️ 死守18:00下班线！用【⌨️键盘拍飞】、踢转椅或泼☕冰美式清场'
+    ctrl: '🕹️ 死守18:00下班线！用【⌨️键盘拍飞】、踢转椅或泼☕冰美式清场',
+    ctrlShort: '键盘拍飞 · 踢椅 · 泼咖啡清场'
   },
   shredder_race: {
     color: '#e85d04',
     bg: '#ffe5d9',
     icon: '🗑️',
-    ctrl: '🕹️ 抢在HR前抱起降薪协议(可叠拿)，冲到碎纸机点【📄塞碎纸机】'
+    ctrl: '🕹️ 抢在HR前抱起降薪协议(可叠拿)，冲到碎纸机点【📄塞碎纸机】',
+    ctrlShort: '抱协议冲碎纸机 · 可叠拿3份'
   },
   vault_heist: {
     color: '#c98a00',
     bg: '#fff3b0',
     icon: '💎',
-    ctrl: '🕹️ 将办公椅推上3块发光重力板解锁金库，抱走宝箱冲进电梯'
+    ctrl: '🕹️ 将办公椅推上3块发光重力板解锁金库，抱走宝箱冲进电梯',
+    ctrlShort: '推椅压3块板 · 抱宝箱进电梯'
   },
   blackout_escape: {
     color: '#3a0ca3',
     bg: '#e0fbfc',
     icon: '🌑',
-    ctrl: '🕹️ 拉断3处配电闸触发全司大停电，借夜色躲开手电光束溜进电梯'
+    ctrl: '🕹️ 拉断3处配电闸触发全司大停电，借夜色躲开手电光束溜进电梯',
+    ctrlShort: '拉3处电闸 · 借黑摸进电梯'
   },
   final_boss: {
     color: '#ff006e',
     bg: '#ffe5ec',
     icon: '🔥',
-    ctrl: '🕹️ 三阶段总决战！反拍黑锅+躲大饼+引Boss撞碎纸机，空血贴解雇信'
+    ctrl: '🕹️ 三阶段总决战！反拍黑锅+躲大饼+引Boss撞碎纸机，空血贴解雇信',
+    ctrlShort: '反拍黑锅 · 引Boss撞碎纸机'
   }
 }
 
@@ -226,6 +237,86 @@ function saveStars(map) {
   } catch {}
 }
 
+// 首次触发式教学：只提示一次，存在本地，不打断游戏
+const TUTORIAL_KEY = 'niuma_tutorial_seen_v5'
+const TUTORIAL_TIPS = {
+  move: {
+    icon: '🕹️',
+    color: '#3a86ff',
+    text: '摇杆移动，点地图自动寻路；右下大按钮互动。'
+  },
+  carton: {
+    icon: '📦',
+    color: '#dda15e',
+    text: '纸箱只撑 5 秒，站定才隐身；被老板正面盯上会识破。'
+  },
+  hide: {
+    icon: '🌿',
+    color: '#2a9d8f',
+    text: '草丛能躲 4 秒，超时会露馅；先甩开视线再钻。'
+  },
+  coffee: {
+    icon: '☕',
+    color: '#8338ec',
+    text: '冰美式 4.5 秒加速 + 无限体力，适合冲刺窗口。'
+  },
+  soap: {
+    icon: '🧼',
+    color: '#0096c7',
+    text: '洗洁精水滩 12 秒，引敌人踩上去滑飞。'
+  },
+  frog: {
+    icon: '🐸',
+    color: '#f77f00',
+    text: '发条青蛙叫 5 秒，把巡逻引到别处。'
+  },
+  spotted: {
+    icon: '🚨',
+    color: '#ff006e',
+    text: '被发现别慌：绕墙、钻掩体，或踢转椅反杀。'
+  }
+}
+
+function loadTutorialSeen() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(TUTORIAL_KEY) || '{}')
+    return raw && typeof raw === 'object' ? raw : {}
+  } catch {
+    return {}
+  }
+}
+function saveTutorialSeen() {
+  try {
+    localStorage.setItem(TUTORIAL_KEY, JSON.stringify(tutorialSeen))
+  } catch {}
+}
+const tutorialSeen = loadTutorialSeen()
+let tutorialQueue = []
+let tutorialActive = null
+let tutorialTimer = 0
+
+function queueTutorial(key) {
+  const tip = TUTORIAL_TIPS[key]
+  if (!tip || tutorialSeen[key]) return
+  if (tutorialActive?.key === key) return
+  if (tutorialQueue.some(t => t.key === key)) return
+  tutorialQueue.push({ key, ...tip })
+  if (tutorialQueue.length > 3) tutorialQueue.shift()
+}
+
+function updateTutorial(dt) {
+  if (tutorialActive) {
+    tutorialTimer -= dt
+    if (tutorialTimer <= 0) tutorialActive = null
+  }
+  if (!tutorialActive && tutorialQueue.length > 0) {
+    tutorialActive = tutorialQueue.shift()
+    tutorialTimer = 8
+    tutorialSeen[tutorialActive.key] = true
+    saveTutorialSeen()
+  }
+}
+
 const bgm = createBgmController()
 
 let level = 1
@@ -319,6 +410,47 @@ const totalStarsEarned = () => {
   let sum = 0
   for (let i = 1; i <= TOTAL_LEVELS; i++) sum += bests[i] || 0
   return sum
+}
+
+// 三星条件：与 stealthGame.snapshot() 的星级判定保持一致，并让玩家看得见
+const ACTION_STAR_MODES = ['pot_pong', 'chair_derby', 'be_the_boss', 'shredder_race', 'final_boss']
+const GUARD_STAR_MODES = ['wake_coworkers', 'desk_defense']
+
+function getStarPlan(cfg) {
+  if (ACTION_STAR_MODES.includes(cfg.mode)) {
+    return [
+      { label: '通关本关' },
+      { label: '失误 / 被发现 ≤ 1 次' },
+      { label: `${cfg.parTime}s 内通关 或 整蛊 ≥ 3 次` }
+    ]
+  }
+  if (GUARD_STAR_MODES.includes(cfg.mode)) {
+    return [
+      { label: '通关本关' },
+      { label: '零失误 / 零被发现' },
+      { label: '整蛊 ≥ 1 次 或 工位满耐久' }
+    ]
+  }
+  return [
+    { label: '通关本关' },
+    { label: '零失误 / 零被发现' },
+    { label: '整蛊 ≥ 1 次' }
+  ]
+}
+
+function getStarAchieved(s, cfg) {
+  const fast = cfg.timeLimit - s.timeLeft <= cfg.parTime
+  if (ACTION_STAR_MODES.includes(cfg.mode)) {
+    return [s.gameState === 'won', s.spottedCount <= 1, fast || s.bossPranked >= 3]
+  }
+  if (GUARD_STAR_MODES.includes(cfg.mode)) {
+    return [
+      s.gameState === 'won',
+      s.spottedCount === 0,
+      s.bossPranked > 0 || (s.deskMaxHp > 0 && s.deskHp === s.deskMaxHp)
+    ]
+  }
+  return [s.gameState === 'won', s.spottedCount === 0, s.bossPranked > 0]
 }
 
 // ================= WebAudio 合成音效 & 震动反馈 =================
@@ -446,6 +578,11 @@ function spawnPaper(x, y, count = 20) {
 function consumeEvents() {
   while (game.events.length > 0) {
     const ev = game.events.shift()
+    if (ev.type === 'loot') {
+      if (ev.text.includes('洗洁精')) queueTutorial('soap')
+      if (ev.text.includes('冰美式')) queueTutorial('coffee')
+      if (ev.text.includes('发条青蛙')) queueTutorial('frog')
+    }
     const sp = P(ev.x, ev.y + 18)
     const colors = {
       prank: '#e63946',
@@ -636,6 +773,7 @@ function startPlay() {
     bannerTimer = 2.2
     triggerSpotlight('opening')
     syncBgmTrack()
+    queueTutorial('move')
     sfx('tap')
   }
 }
@@ -1338,7 +1476,7 @@ function bar(x, y, w, h, ratio, color, label, { textColor = INK, strokeText = nu
     )
   }
   text(label, x + w / 2, y + h / 2 + 0.5, {
-    size: 9.2,
+    size: 10,
     align: 'center',
     base: 'middle',
     color: textColor,
@@ -1458,22 +1596,22 @@ function drawHUD() {
   // 1) 顶部关卡栏（点击可随时展开16关章节选关器）
   rr(TOP_MENU_RECT.x, TOP_MENU_RECT.y, TOP_MENU_RECT.w, TOP_MENU_RECT.h, 17, '#fffdf5', INK, 2.4)
   circle(25, 23, 12.5, meta.color, INK, 2)
-  text(`${level}`, 25, 27.5, { size: 12.5, color: '#ffffff', align: 'center' })
+  text(`${level}`, 25, 27.5, { size: 13.5, color: '#ffffff', align: 'center' })
 
   // 玩法模式彩色胶囊角标
   const badgeTxt = game.cfg.modeBadge || '潜行摸鱼'
   ctx.font = FONT(8.8)
   const bw = ctx.measureText(badgeTxt).width + 10
   rr(42, 13, bw, 20, 10, meta.bg, meta.color, 1.6)
-  text(badgeTxt, 42 + bw / 2, 23.5, { size: 8.8, color: meta.color, align: 'center', base: 'middle' })
+  text(badgeTxt, 42 + bw / 2, 23.5, { size: 9.4, color: meta.color, align: 'center', base: 'middle' })
 
   // 关卡名 + 选关提示
   const titleX = 42 + bw + 6
   const maxTitleW = TOP_MENU_RECT.x + TOP_MENU_RECT.w - titleX - 38
-  text(game.cfg.title, titleX, 27.5, { size: 12, color: INK, max: Math.max(60, maxTitleW) })
+  text(game.cfg.title, titleX, 27.5, { size: 13, color: INK, max: Math.max(60, maxTitleW) })
   rr(TOP_MENU_RECT.x + TOP_MENU_RECT.w - 35, 13, 29, 20, 9, '#f1f3f5', 'rgba(43,45,66,0.35)', 1.2)
   text('选关', TOP_MENU_RECT.x + TOP_MENU_RECT.w - 20.5, 23.5, {
-    size: 8.2,
+    size: 9,
     color: '#495057',
     align: 'center',
     base: 'middle'
@@ -1648,7 +1786,7 @@ function drawHUD() {
   // 3) 地图下方：当前目标胶囊（点击可随时点亮聚光灯指路！） + 实时三星达成指示器
   const ty = OY + MAP_SH + 8 // 596
   rr(8, ty, 240, 26, 13, spotlightTimer > 0 ? '#fff3b0' : '#fffdf5', INK, 2.2)
-  text(`🎯 ${s.taskText}`, 16, ty + 17, { size: 9.6, max: 184 })
+  text(`🎯 ${s.taskText}`, 16, ty + 17, { size: 10.4, max: 184 })
   rr(204, ty + 4, 40, 18, 9, '#ffd166', INK, 1.4)
   text('📍指路', 224, ty + 13.5, { size: 7.8, color: INK, align: 'center', base: 'middle' })
 
@@ -1670,7 +1808,7 @@ function drawHUD() {
   const msg = phase === 'intro' ? '自由点选16关任意模式，点击【立刻开工！】发车！' : s.statusText
   const lines = wrapLines(msg, 354, 9.6).slice(0, 2)
   rr(8, sy, 374, 34, 10, 'rgba(255,253,245,0.88)', INK, 1.8)
-  lines.forEach((l, i) => text(l, 16, sy + 13.5 + i * 13, { size: 9.6, color: '#3d405b' }))
+  lines.forEach((l, i) => text(l, 16, sy + 13.5 + i * 13, { size: 10.2, color: '#3d405b' }))
 }
 
 // ================= 底部摇杆与多模式自适应技能盘 =================
@@ -1716,7 +1854,7 @@ function drawControls() {
             : '走位'
           : '移动'
   text(moveLabel, JOY.x, JOY.y + JOY.r + 15, {
-    size: 9.8,
+    size: 10.5,
     align: 'center',
     stroke: '#fffdf5',
     sw: 3
@@ -1728,7 +1866,7 @@ function drawControls() {
       : ['stealth', 'prank_hunt', 'vault_heist', 'blackout_escape'].includes(game.mode)
         ? '推到底=冲刺(有声)'
         : '摇杆灵活走位'
-  text(topJoyTip, JOY.x, JOY.y - JOY.r - 7, { size: 8, align: 'center', color: '#5c5470' })
+  text(topJoyTip, JOY.x, JOY.y - JOY.r - 7, { size: 8.7, align: 'center', color: '#5c5470' })
 
   const btn = (b, fill, icon, label, sub, down) => {
     const r = down ? b.r * 0.92 : b.r
@@ -1741,7 +1879,7 @@ function drawControls() {
     emoji(icon, b.x, b.y - (label ? 6 : 0) + (down ? 3 : 0), r * 0.58)
     if (label) {
       text(label, b.x, b.y + r * 0.54 + (down ? 3 : 0), {
-        size: r > 40 ? 10.5 : 8,
+        size: r > 40 ? 11 : 8.6,
         align: 'center',
         color: '#ffffff',
         stroke: INK,
@@ -1751,7 +1889,7 @@ function drawControls() {
     }
     if (sub !== null && sub !== undefined && sub !== '') {
       circle(b.x + r * 0.72, b.y - r * 0.72, 9.5, '#ffbe0b', INK, 2)
-      text(String(sub), b.x + r * 0.72, b.y - r * 0.72 + 3.5, { size: 8.2, align: 'center' })
+      text(String(sub), b.x + r * 0.72, b.y - r * 0.72 + 3.5, { size: 8.8, align: 'center' })
     }
   }
 
@@ -1907,6 +2045,13 @@ function drawOverlays(dt) {
   ctx.globalAlpha = 1
 
   const s = game.snapshot()
+  if (phase === 'play' && s.gameState === 'playing') {
+    if (game.player.carton) queueTutorial('carton')
+    if (game.player.hiding) queueTutorial('hide')
+    if (game.player.activeBuffTimer > 0) queueTutorial('coffee')
+    if (s.spottedCount > 0) queueTutorial('spotted')
+  }
+  updateTutorial(dt)
   const lethalStealth = ['stealth', 'prank_hunt', 'vault_heist', 'blackout_escape'].includes(
     game.mode
   )
@@ -1994,6 +2139,29 @@ function drawOverlays(dt) {
     )
   }
 
+  // 首次触发动机提示横幅（只出现一次，4.2 秒自动消失）
+  if (tutorialActive && phase === 'play' && s.gameState === 'playing') {
+    const fadeIn = Math.min(1, (8 - tutorialTimer) / 0.25)
+    const fadeOut = Math.min(1, tutorialTimer / 0.4)
+    const alpha = Math.max(0, Math.min(fadeIn, fadeOut))
+    ctx.save()
+    ctx.globalAlpha = alpha
+    const by = OY + 52
+    rr(22, by, 346, 48, 12, 'rgba(255,253,245,0.97)', '#ffbe0b', 2.5)
+    circle(45, by + 24, 14, tutorialActive.color, INK, 1.8)
+    emoji(tutorialActive.icon, 45, by + 24, 16)
+    const lines = wrapLines(tutorialActive.text, 270, 10.5).slice(0, 2)
+    lines.forEach((l, i) =>
+      text(l, 66, by + 20 + i * 14, { size: 10.5, color: INK, max: 270 })
+    )
+    text('首次提示', 354, by + 41, {
+      size: 7.5,
+      color: 'rgba(43,45,66,0.55)',
+      align: 'right'
+    })
+    ctx.restore()
+  }
+
   if (phase === 'intro') drawIntro()
   else if (s.gameState !== 'playing') drawEnd(s)
 
@@ -2024,7 +2192,7 @@ function drawIntro() {
     sw: 4.2
   })
   text(`当前怨种老板：【${bProf.name}】· 点右侧可换形象`, x + 14, 78, {
-    size: 9.2,
+    size: 10,
     color: 'rgba(255,255,255,0.94)'
   })
 
@@ -2061,12 +2229,12 @@ function drawIntro() {
       sel ? 2.6 : 1.8
     )
     text(`第${ch.id}章`, tb.x + tb.w / 2, tb.y + 14, {
-      size: 9.5,
+      size: 10,
       color: sel ? '#ffffff' : '#495057',
       align: 'center'
     })
     text(`${shortTag} ★${chStars}`, tb.x + tb.w / 2, tb.y + 30, {
-      size: 8.2,
+      size: 8.6,
       color: sel ? '#fff3b0' : '#6c757d',
       align: 'center',
       max: tb.w - 6
@@ -2075,7 +2243,7 @@ function drawIntro() {
 
   // 章节副标题导语 (y: 150..164)
   text(`${activeChap.title} — ${activeChap.subtitle}`, VW / 2, 161, {
-    size: 9.2,
+    size: 9.6,
     color: '#495057',
     align: 'center',
     max: w - 24
@@ -2106,7 +2274,7 @@ function drawIntro() {
     // 卡片顶部模式彩色角标
     rr(cd.x + 5, cd.y + 5 - (sel ? 2 : 0), cd.w - 10, 18, 9, lmeta.color, null, 0)
     text(`Lv.${cd.lvl} ${lcfg.modeBadge}`, cd.x + cd.w / 2, cd.y + 14.5 - (sel ? 2 : 0), {
-      size: cards.length === 4 ? 7.8 : 8.6,
+      size: cards.length === 4 ? 8.4 : 9.2,
       color: '#ffffff',
       align: 'center',
       base: 'middle',
@@ -2115,7 +2283,7 @@ function drawIntro() {
 
     // 卡片中部关卡短标题
     text(lcfg.title, cd.x + cd.w / 2, cd.y + 44 - (sel ? 2 : 0), {
-      size: cards.length === 4 ? 9.5 : 10.8,
+      size: cards.length === 4 ? 10.2 : 11.5,
       color: INK,
       align: 'center',
       max: cd.w - 8
@@ -2123,7 +2291,7 @@ function drawIntro() {
 
     // 卡片底部星级记录
     text('★'.repeat(st) + '☆'.repeat(3 - st), cd.x + cd.w / 2, cd.y + 68 - (sel ? 2 : 0), {
-      size: 10.5,
+      size: 11,
       color: st > 0 ? '#e85d04' : '#adb5bd',
       align: 'center'
     })
@@ -2142,11 +2310,11 @@ function drawIntro() {
   // 4) 当前选中关卡详情区 (y: 272..696)
   // 4a. 彩色玩法角标 + 限时 + 场景布局标签
   const badgeLabel = `${meta.icon} 【${cfg.modeBadge}】`
-  ctx.font = FONT(10.5)
+  ctx.font = FONT(11)
   const tagW = ctx.measureText(badgeLabel).width + 18
   rr(x + 16, 271, tagW, 24, 12, meta.color, INK, 2)
   text(badgeLabel, x + 16 + tagW / 2, 283.5, {
-    size: 10.5,
+    size: 11,
     color: '#ffffff',
     align: 'center',
     base: 'middle'
@@ -2155,7 +2323,7 @@ function drawIntro() {
   const sceneTitle = cfg.sceneName || LAYOUT_NAMES[cfg.layout] || '综合办公区'
   const layoutLabel = `📍 ${sceneTitle} · ⏱${cfg.timeLimit}s`
   text(layoutLabel, x + w - 16, 287, {
-    size: 9.5,
+    size: 10,
     color: '#5c5470',
     align: 'right',
     max: w - tagW - 42
@@ -2163,19 +2331,19 @@ function drawIntro() {
 
   // 关卡大标题
   text(`第${level}关 · ${cfg.title}`, VW / 2, 319, {
-    size: 18,
+    size: 19,
     color: INK,
     align: 'center',
     max: w - 30
   })
 
-  // 4b. 爆笑剧情简介漫画气泡 + 角色Q版立绘 (y: 330..408)
-  const storyLines = wrapLines(cfg.story || cfg.boss_quote, w - 102, 10).slice(0, 4)
-  const qh = Math.max(54, storyLines.length * 14.5 + 14)
+  // 4b. 一句话目标气泡（只留 2 行，长剧情不再塞进选关页）
+  const storyLines = wrapLines(cfg.subtitle || cfg.story || cfg.boss_quote, w - 102, 11).slice(0, 2)
+  const qh = Math.max(48, storyLines.length * 15 + 14)
   const qy = 330
   rr(x + 68, qy, w - 84, qh, 13, meta.bg, INK, 2)
   storyLines.forEach((l, i) =>
-    text(l, x + 78, qy + 18 + i * 14.5, { size: 10, color: '#2b2d42' })
+    text(l, x + 78, qy + 19 + i * 15, { size: 11, color: '#2b2d42' })
   )
 
   // 左侧Q版立绘（点击立绘也可打开捏老板工坊！）
@@ -2204,10 +2372,10 @@ function drawIntro() {
   let cy = qy + qh + 14
 
   // 4c. 目标清单（清晰勾选卡）
-  text('🎯 本关目标清单', x + 18, cy + 4, { size: 12, color: INK })
+  text('🎯 本关目标清单', x + 18, cy + 4, { size: 13, color: INK })
   const curBest = bests[level] || 0
   text(`最佳记录：${'★'.repeat(curBest)}${'☆'.repeat(3 - curBest)}`, x + w - 18, cy + 4, {
-    size: 10,
+    size: 10.5,
     color: curBest > 0 ? '#e85d04' : '#868e96',
     align: 'right'
   })
@@ -2220,36 +2388,48 @@ function drawIntro() {
   ).slice(0, 3)
 
   objs.forEach((ob, idx) => {
-    const rowH = 25
+    const rowH = 27
     rr(x + 16, cy, w - 32, rowH, 8, '#f8f9fa', 'rgba(43,45,66,0.25)', 1.5)
-    circle(x + 29, cy + rowH / 2, 7.5, meta.color, INK, 1.4)
+    circle(x + 29, cy + rowH / 2, 8, meta.color, INK, 1.4)
     text(`${idx + 1}`, x + 29, cy + rowH / 2 + 3.2, {
-      size: 8.5,
+      size: 9,
       color: '#ffffff',
       align: 'center'
     })
-    text(ob.text, x + 42, cy + 16.5, { size: 10, color: '#2b2d42', max: w - 66 })
+    text(ob.text, x + 42, cy + 17.5, { size: 11, color: '#2b2d42', max: w - 66 })
     cy += rowH + 5
   })
 
-  // 4d. 玩法窍门与操控提示框
-  cy += 4
-  const tip1 = wrapLines(`💡 窍门：${cfg.hints?.[0] || cfg.subtitle}`, w - 52, 9.6).slice(0, 2)
-  const tip2 = wrapLines(meta.ctrl, w - 52, 9.6).slice(0, 2)
-  const boxH = (tip1.length + tip2.length) * 14 + 16
+  // 4d. 三星条件（与结算判定一致，提前告诉玩家怎么拿星）
+  cy += 2
+  const starPlan = getStarPlan(cfg)
+  rr(x + 16, cy, w - 32, 68, 10, '#f8f9fa', 'rgba(43,45,66,0.25)', 1.5)
+  text('🏅 三星条件（结算逐条判定）', x + 26, cy + 16, { size: 11, color: INK })
+  starPlan.forEach((p, i) => {
+    const rowY = cy + 33 + i * 14
+    text('★'.repeat(i + 1), x + 26, rowY, { size: 8.6, color: '#e85d04' })
+    text(p.label, x + 72, rowY, { size: 10.2, color: '#495057', max: w - 100 })
+  })
+  cy += 74
+
+  // 4e. 一句窍门 + 一行短操作（不再堆 3 条提示和长句）
+  const tip1 = wrapLines(`💡 ${cfg.hints?.[0] || cfg.subtitle}`, w - 52, 10.5).slice(0, 2)
+  const tip2 = wrapLines(`🕹️ ${meta.ctrlShort || meta.ctrl}`, w - 52, 10.5).slice(0, 1)
+  const lineH = 15
+  const boxH = (tip1.length + tip2.length) * lineH + 16
   const safeBoxH = Math.min(boxH, Math.max(46, 694 - cy))
   rr(x + 16, cy, w - 32, safeBoxH, 12, '#fff3b0', INK, 2)
-  let ty = cy + 16
+  let ty = cy + 17
   tip1.forEach(l => {
     if (ty <= cy + safeBoxH - 4) {
-      text(l, x + 26, ty, { size: 9.6, color: '#7f5539', max: w - 52 })
-      ty += 14
+      text(l, x + 26, ty, { size: 10.5, color: '#7f5539', max: w - 52 })
+      ty += lineH
     }
   })
   tip2.forEach(l => {
     if (ty <= cy + safeBoxH - 4) {
-      text(l, x + 26, ty, { size: 9.6, color: '#3a0ca3', max: w - 52 })
-      ty += 14
+      text(l, x + 26, ty, { size: 10.5, color: '#3a0ca3', max: w - 52 })
+      ty += lineH
     }
   })
 
@@ -2404,7 +2584,7 @@ function drawEnd(s) {
   )
 
   text(`第${level}关 · ${game.cfg.title} 【${game.cfg.modeBadge}】`, VW / 2, cardTop + 62, {
-    size: 11.5,
+    size: 12,
     color: '#5c5470',
     align: 'center'
   })
@@ -2460,35 +2640,52 @@ function drawEnd(s) {
         cardTop + 346,
         { size: 10.5, align: 'center', color: '#495057' }
       )
-    } else {
       text(
-        `⏱ 用时 ${(game.cfg.timeLimit - s.timeLeft).toFixed(1)}s   👀 失误/暴露 ${s.spottedCount} 次`,
+        `🏅 三星：通关 / 失误≤1 / ${game.cfg.parTime}s内或整蛊≥3`,
         VW / 2,
-        cardTop + 162,
-        { size: 12, align: 'center', color: '#495057' }
+        cardTop + 374,
+        { size: 9.5, align: 'center', color: '#7f5539', max: VW - 72 }
       )
-      text(`🤡 整顿/反击战果 ${s.bossPranked} 次`, VW / 2, cardTop + 186, {
-        size: 12,
-        align: 'center',
-        color: '#495057'
+    } else {
+      const plan = getStarPlan(game.cfg)
+      const ach = getStarAchieved(s, game.cfg)
+      const critTop = cardTop + 128
+      rr(38, critTop, VW - 76, 70, 10, '#f8f9fa', 'rgba(43,45,66,0.22)', 1.5)
+      plan.forEach((p, i) => {
+        const rowY = critTop + 19 + i * 17
+        text(`${ach[i] ? '✅' : '⬜'}`, 52, rowY, { size: 10, color: ach[i] ? '#2a9d8f' : '#adb5bd' })
+        text('★'.repeat(i + 1), 78, rowY, { size: 8.8, color: ach[i] ? '#e85d04' : '#adb5bd' })
+        text(p.label, 120, rowY, {
+          size: 10,
+          color: ach[i] ? '#2b2d42' : '#868e96',
+          max: VW - 170
+        })
       })
-      text(`💸 王总心理与财产损失 $${s.companyLoss.toLocaleString()}`, VW / 2, cardTop + 216, {
-        size: 14,
+
+      text(
+        `⏱ ${(game.cfg.timeLimit - s.timeLeft).toFixed(1)}s · 👀 失误 ${s.spottedCount} · 🤡 整蛊 ${s.bossPranked}`,
+        VW / 2,
+        cardTop + 214,
+        { size: 11.5, align: 'center', color: '#495057', max: VW - 76 }
+      )
+      text(`💸 王总心理与财产损失 $${s.companyLoss.toLocaleString()}`, VW / 2, cardTop + 236, {
+        size: 13.5,
         align: 'center',
-        color: '#e85d04'
+        color: '#e85d04',
+        max: VW - 76
       })
 
       const nextCfg = LEVEL_CONFIGS[level + 1]
       if (nextCfg) {
-        rr(42, cardTop + 236, VW - 84, 52, 12, '#fff3b0', INK, 1.8)
-        text(`🔜 下一关预告：Lv.${level + 1}【${nextCfg.modeBadge}】${nextCfg.title}`, VW / 2, cardTop + 256, {
-          size: 10.8,
+        rr(42, cardTop + 250, VW - 84, 46, 12, '#fff3b0', INK, 1.8)
+        text(`🔜 下一关：Lv.${level + 1}【${nextCfg.modeBadge}】${nextCfg.title}`, VW / 2, cardTop + 269, {
+          size: 11,
           align: 'center',
           color: '#7f5539',
           max: VW - 100
         })
-        text(nextCfg.subtitle, VW / 2, cardTop + 276, {
-          size: 9.2,
+        text(nextCfg.subtitle, VW / 2, cardTop + 287, {
+          size: 9.6,
           align: 'center',
           color: '#5c5470',
           max: VW - 100
@@ -2651,6 +2848,7 @@ function loop(t) {
   renderer.drawWalls(game, clock)
   renderer.drawZoneLabels(game, clock)
   renderer.drawProps(game, clock, game.currentTarget)
+  renderer.drawFocusOverlay(game, clock)
   renderer.drawProjectilesAndExtras(game, clock)
   renderer.drawCharacters(game, clock)
   renderer.drawLighting(game, clock)

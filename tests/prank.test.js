@@ -98,9 +98,12 @@ test('3. raycast occlusion (T_WALL blocks, T_GLASS transparent) and carton disgu
   g.player.isMoving = false
   assert.equal(g.canObserverSeePlayer(boss), true, 'T_GLASS must NOT block sight')
 
-  // Stationary carton disguise hides player inside Boss FOV!
+  // 正面直视会识破纸箱；侧向余光仍然有效
   g.toggleCarton()
-  assert.equal(g.canObserverSeePlayer(boss), false, 'stationary carton hides player')
+  assert.equal(g.canObserverSeePlayer(boss), true, 'direct stare breaks the carton')
+  boss.dirAngle = Math.PI / 2 - 0.4
+  assert.equal(g.canObserverSeePlayer(boss), false, 'carton hides player from peripheral vision')
+  boss.dirAngle = Math.PI / 2
   g.toggleCarton()
 
   // Move boss to (6,2) and player to (6,5) separated directly by solid T_WALL at (6,4)
@@ -249,6 +252,34 @@ test('6. snitch coworker alarm summons guards; carton uses are limited; hiding i
   g3.step(1 / 60, { dx: -0.0001, dy: 0 })
   assert.equal(g3.player.hideBlown, true)
   assert.equal(g3.player.hiding, false)
+})
+
+test('8. carton, hide spot and soap puddle all expire on their own timers', () => {
+  const g = createStealthGame(1)
+  g.toggleCarton()
+  assert.equal(g.player.carton, true)
+  assert.equal(g.snapshot().player.cartonTimer, 5)
+  for (let i = 0; i < 5 * 60 + 3; i++) g.step(1 / 60)
+  assert.equal(g.player.carton, false, 'carton must auto-remove after 5s')
+
+  const h = createStealthGame(1)
+  h.guards[0].viewDist = 0
+  h.snitches.forEach(sn => (sn.viewDist = 0))
+  const plant = cellCenter(3, 7)
+  Object.assign(h.player, { x: plant.x, y: plant.y, col: 3, row: 7 })
+  h.step(1 / 60)
+  assert.equal(h.player.hiding, true)
+  for (let i = 0; i < 4 * 60 + 3; i++) h.step(1 / 60)
+  assert.equal(h.player.hideBlown, true, 'hide spot must expire after 4s')
+  assert.equal(h.player.hiding, false)
+
+  const p = createStealthGame(4)
+  p.guards.forEach(gu => (gu.viewDist = 0))
+  p.player.inventory.push({ id: 'soap', icon: '🧼', name: '洗洁精', desc: '' })
+  assert.equal(p.useInventoryItem(0), true)
+  assert.equal(p.soapPuddles.length, 1)
+  for (let i = 0; i < 12 * 60 + 3; i++) p.step(1 / 60)
+  assert.equal(p.soapPuddles.length, 0, 'soap puddle must expire after 12s')
 })
 
 test('7. guards turn to face their walking direction', () => {
