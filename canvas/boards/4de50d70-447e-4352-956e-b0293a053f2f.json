@@ -1,10 +1,96 @@
 {
   "version": 1,
   "viewport": {
-    "width": 1280,
-    "height": 720
+    "width": 1600,
+    "height": 1040
   },
-  "nodes": [],
+  "nodes": [
+    {
+      "id": "qa-group",
+      "type": "group",
+      "data": {
+        "name": "设计问答"
+      },
+      "title": "《牛马求生记》设计问答总览",
+      "description": "职场整蛊动作游戏的设计复盘画板：左侧为设计问答全文，右侧为定位、核心循环、16 关结构、操作反馈、技术架构与待办摘要。"
+    },
+    {
+      "id": "qa-doc",
+      "type": "document",
+      "data": {
+        "documentId": "design-qa"
+      },
+      "parentId": "qa-group",
+      "title": "设计问答全文（14 节 45 问）",
+      "description": "主设计文档。基于 16 关 / 5 章 / 11 种模式的当前实现整理，含定位、核心循环、关卡表、模式表、星级规则、美术音频、架构、存档、测试、技术债与待确认问题。"
+    },
+    {
+      "id": "qa-card-position",
+      "type": "text",
+      "data": {
+        "text": "一句话定位\n\n竖屏手机上的职场潜行 × 整蛊 × 物理狂欢。\n\n5 章 / 16 关 / 11 种玩法模式，单局 45–90 秒。\n\n核心卖点：\n· 每 3 关换一种玩法\n· 失败成本低、重试快\n· 把职场怨气变成可见的整蛊反馈",
+        "instruction": "固定说明文字，直接展示，不需要生成。"
+      },
+      "parentId": "qa-group",
+      "title": "一句话定位",
+      "description": "画板摘要卡片：产品定位与核心卖点。"
+    },
+    {
+      "id": "qa-card-loop",
+      "type": "text",
+      "data": {
+        "text": "核心循环\n\n选关（目标 / 提示 / 历史星级）\n  ↓\n聚光灯锁定目标 → 摇杆或点地移动\n  ↓\n看准时机互动 / 整蛊 / 反击\n  ↓\n结算 1–3 星 → 下一关或重打刷星\n\n推进：章节主题升级 + 16 关 × 3 星收集，全关卡自由可选。",
+        "instruction": "固定说明文字，直接展示，不需要生成。"
+      },
+      "parentId": "qa-group",
+      "title": "核心循环",
+      "description": "画板摘要卡片：单局闭环与关卡间推进方式。"
+    },
+    {
+      "id": "qa-card-journey",
+      "type": "text",
+      "data": {
+        "text": "16 关节奏：规则复杂度爬坡，而不是数值堆叠\n\n第1章 潜行摸鱼（Lv1–3）\n  单 Boss、无监控、两步目标，教会躲视野\n第2章 花式整蛊（Lv4–6）\n  从「躲」转「主动设局」，组合操作登场\n第3章 物理狂欢（Lv7–9）\n  飙椅漂移、氮气冲撞、反弹黑锅，考操作精度\n第4章 脑洞反转（Lv10–12）\n  救队友、当老板、守工位，多目标管理\n第5章 终极掀桌（Lv13–16）\n  碎纸、金库、拉闸、三阶段决战，综合考试",
+        "instruction": "固定说明文字，直接展示，不需要生成。"
+      },
+      "parentId": "qa-group",
+      "title": "16 关节奏",
+      "description": "画板摘要卡片：五章的情绪与玩法递进。"
+    },
+    {
+      "id": "qa-card-controls",
+      "type": "text",
+      "data": {
+        "text": "操作\n· 左下摇杆：推到底自动冲刺\n· 点地图：自动寻路并执行交互\n· 右下主按钮：随模式变化\n· 副按钮 + 两个道具槽\n· 键盘兼容：WASD / E / Q / R / M\n\n反馈\n· 即时：音效、短震动、按钮缩放\n· 目标：聚光灯、箭头、任务条\n· 事件：飘字、粒子、震屏、慢动作\n· 结算：星级点亮、烟花、评语",
+        "instruction": "固定说明文字，直接展示，不需要生成。"
+      },
+      "parentId": "qa-group",
+      "title": "操作与反馈",
+      "description": "画板摘要卡片：移动端输入方案与四层反馈。"
+    },
+    {
+      "id": "qa-card-tech",
+      "type": "text",
+      "data": {
+        "text": "技术架构\n\nVite 6 + 原生 Canvas 2D + WebAudio，零外部美术/音频资源。\n\nmain.js　主循环 / 输入 / HUD / 存档\nstealthGame.js　玩法状态机 + 11 种模式\ncampaignLevels.js　5 章 16 关纯数据\nofficeRenderer.js　2.5D 场景绘制\nbgm.js　程序化 BGM\nbossCustomizer.js　捏老板工坊\n\n发布包约 232 kB JS（gzip 83 kB）。",
+        "instruction": "固定说明文字，直接展示，不需要生成。"
+      },
+      "parentId": "qa-group",
+      "title": "技术架构",
+      "description": "画板摘要卡片：技术栈、分层与包体。"
+    },
+    {
+      "id": "qa-card-gaps",
+      "type": "text",
+      "data": {
+        "text": "已知缺口与下一步\n\n现在：\n· 24 项自动化测试通过，16 关可初始化并验证胜利路径\n· 存档仅 localStorage（星级 + 老板形象），换设备会丢\n· 飘字堆叠、结算统计偏少、章节间缺过场\n· prankSim.js 未被引用，physics.js 仅测试使用\n\n建议优先级：\nP0 清理死代码、补设计文档 → P1 手感修复 + SDK 存档/排行榜\n→ P2 新关卡/过场 → P3 美术资源化",
+        "instruction": "固定说明文字，直接展示，不需要生成。"
+      },
+      "parentId": "qa-group",
+      "title": "技术债与下一步",
+      "description": "画板摘要卡片：已知问题与优先级建议，详情见文档第 13、14 节。"
+    }
+  ],
   "edges": [],
   "id": "4de50d70-447e-4352-956e-b0293a053f2f"
 }

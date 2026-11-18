@@ -1,10 +1,16 @@
 {
   "version": 1,
+  "mainDocumentId": "design-qa",
   "boards": [
     {
       "id": "4de50d70-447e-4352-956e-b0293a053f2f",
-      "name": "Untitled"
+      "name": "设计问答总览"
     }
   ],
-  "documents": []
+  "documents": [
+    {
+      "id": "design-qa",
+      "title": "《牛马求生记》设计问答"
+    }
+  ]
 }
